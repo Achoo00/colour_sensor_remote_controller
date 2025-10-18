@@ -1,151 +1,148 @@
 import cv2
 import numpy as np
-import webbrowser
+import json
 import time
+import webbrowser
+import math
+from pynput.mouse import Controller as MouseController, Button
+from pynput.keyboard import Controller as KeyboardController, Key
 
-# --- CONFIGURATION ---
-CALIBRATION_MODE = False   # True = calibrate HSV, False = use predefined HSV
-FPS = 30
-HOLD_FRAMES = 3 * FPS      # 3 seconds hold
-apply_lighting_correction = True  # comment out to disable lighting correction
+# === Initialize controllers ===
+mouse = MouseController()
+keyboard = KeyboardController()
 
-# --- PREDEFINED HSV RANGES (tweak manually after calibration if needed) ---
-color_ranges = {
-    "red": [(0, 100, 100), (10, 255, 255)],
-    "yellow": [(20, 100, 100), (30, 255, 255)],
-}
+# === Load configuration ===
+CONFIG_PATH = "config.json"
 
-# --- URL ACTIONS ---
-action_map = {
-    "red": "https://www.youtube.com/playlist?list=WL",
-    "yellow": "https://www.wcoflix.tv/anime/kaiju-no-8",
-}
+with open(CONFIG_PATH, "r") as f:
+    config = json.load(f)
 
-# --- INITIALIZE CAMERA ---
+modes = config["modes"]
+hsv_ranges = config["hsv_ranges"]
+hold_time = config["detection"]["hold_time"]
+roi_x, roi_y, roi_w, roi_h = config["detection"]["roi"]
+
+# === Webcam ===
 cap = cv2.VideoCapture(0)
 if not cap.isOpened():
-    print("Camera not detected!")
-    exit()
+    raise RuntimeError("Could not open webcam.")
 
-def adjust_lighting(frame):
-    """Simple brightness/contrast compensation."""
+# === Runtime state ===
+mode = "main"
+last_color = None
+frame_count = 0
+progress_ratio = 0
+
+# === Utility functions ===
+def perform_action(action_data):
+    """Execute an action defined in the config."""
+    action_type = action_data.get("action")
+    args = action_data.get("args", None)
+
+    if action_type == "open_url":
+        webbrowser.open(args)
+    elif action_type == "click":
+        x, y = args
+        mouse.position = (x, y)
+        mouse.click(Button.left)
+    elif action_type == "key_press":
+        key = args
+        keyboard.press(key)
+        keyboard.release(key)
+    elif action_type == "key_combo":
+        keys = args
+        for k in keys:
+            keyboard.press(k)
+        for k in reversed(keys):
+            keyboard.release(k)
+    else:
+        print(f"⚠️ Unknown action: {action_type}")
+
+def detect_color(frame):
+    """Return the dominant color name from the ROI."""
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    h, s, v = cv2.split(hsv)
-    v = cv2.equalizeHist(v)
-    corrected = cv2.merge((h, s, v))
-    return cv2.cvtColor(corrected, cv2.COLOR_HSV2BGR)
-
-# --- TRACKING VARIABLES ---
-color_hold = None
-color_hold_frames = 0
-
-# --- CALIBRATION MODE ---
-if CALIBRATION_MODE:
-    print("Calibration mode: Shine each color light and press SPACE to capture.")
-    calibration_data = {}
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        if apply_lighting_correction:
-            frame = adjust_lighting(frame)
-
-        roi_x, roi_y, roi_w, roi_h = 200, 200, 100, 100
-        roi = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
-        hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-        avg_hsv = np.mean(hsv.reshape(-1, 3), axis=0)
-
-        cv2.rectangle(frame, (roi_x, roi_y), (roi_x+roi_w, roi_y+roi_h), (255, 0, 0), 2)
-        cv2.putText(frame, f"HSV: {avg_hsv.astype(int)}", (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,255,255), 2)
-
-        cv2.imshow("Calibration", frame)
-        key = cv2.waitKey(1) & 0xFF
-
-        if key == ord(' '):
-            color_name = input("Enter color name (e.g., red, yellow): ").strip().lower()
-            lower = np.maximum(avg_hsv * 0.9, [0, 0, 0]).astype(int)
-            upper = np.minimum(avg_hsv * 1.1, [179, 255, 255]).astype(int)
-            calibration_data[color_name] = (lower.tolist(), upper.tolist())
-            print(f"Saved {color_name}: {lower} - {upper}")
-        elif key == ord('q'):
-            print("Calibration complete. Final values:")
-            print(calibration_data)
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
-    exit()
-
-# --- MAIN LOOP ---
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
-
-    if apply_lighting_correction:
-        frame = adjust_lighting(frame)
-
-    roi_x, roi_y, roi_w, roi_h = 200, 200, 100, 100
-    roi = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
-    hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
-
     detected_color = None
     max_pixels = 0
 
-    # Detect color
-    for color, (lower, upper) in color_ranges.items():
-        mask = cv2.inRange(hsv, np.array(lower), np.array(upper))
+    for color, (lower, upper) in hsv_ranges.items():
+        lower_np = np.array(lower)
+        upper_np = np.array(upper)
+        mask = cv2.inRange(hsv, lower_np, upper_np)
         count = cv2.countNonZero(mask)
         if count > max_pixels:
             max_pixels = count
             detected_color = color
 
-    # --- Draw ROI and debug info ---
+    return detected_color
+
+def draw_progress_circle(frame, ratio, color=(0,255,0), radius=40):
+    """Draw a circular progress bar on screen."""
+    center = (80, 120)
+    thickness = 6
+    ratio = max(0, min(ratio, 1))
+    end_angle = int(360 * ratio)
+
+    # Background circle
+    cv2.circle(frame, center, radius, (100,100,100), thickness)
+
+    # Progress arc
+    cv2.ellipse(frame, center, (radius, radius), -90, 0, end_angle, color, thickness)
+
+    # Percentage text
+    percent = int(ratio * 100)
+    cv2.putText(frame, f"{percent}%", (center[0]-25, center[1]+8),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255,255,255), 2)
+
+# === Main loop ===
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    roi = frame[roi_y:roi_y+roi_h, roi_x:roi_x+roi_w]
+    detected_color = detect_color(roi)
+
+    # Draw ROI box
     cv2.rectangle(frame, (roi_x, roi_y), (roi_x+roi_w, roi_y+roi_h), (255, 0, 0), 2)
-    if detected_color:
-        cv2.putText(frame, f"Detected: {detected_color}", (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
-        print(f"Detected color: {detected_color}")
+    cv2.putText(frame, f"Mode: {mode}", (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+    cv2.putText(frame, f"Detected: {detected_color}", (10, 70),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
 
-        # Track duration
-        if color_hold == detected_color:
-            color_hold_frames += 1
-        else:
-            color_hold = detected_color
-            color_hold_frames = 1
-
-        # --- Visual progress indicator ---
-        progress_ratio = min(color_hold_frames / HOLD_FRAMES, 1.0)
-        bar_x1, bar_y1 = roi_x, roi_y + roi_h + 20
-        bar_x2 = int(bar_x1 + roi_w * progress_ratio)
-        cv2.rectangle(frame, (bar_x1, bar_y1), (bar_x1 + roi_w, bar_y1 + 15), (50, 50, 50), -1)
-        cv2.rectangle(frame, (bar_x1, bar_y1), (bar_x2, bar_y1 + 15), (0, 255, 0), -1)
-
-        if progress_ratio < 1.0:
-            cv2.putText(frame, "HOLDING...", (bar_x1, bar_y1 + 35),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
-        else:
-            cv2.putText(frame, "READY!", (bar_x1, bar_y1 + 35),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
-
-        # --- Trigger action if held long enough ---
-        if color_hold_frames >= HOLD_FRAMES:
-            url = action_map.get(detected_color)
-            if url:
-                print(f"Opening {url}")
-                webbrowser.open(url)
-            color_hold_frames = 0
-            color_hold = None
-
+    # Hold logic
+    if detected_color == last_color and detected_color is not None:
+        frame_count += 1
     else:
-        color_hold_frames = 0
-        color_hold = None
+        frame_count = 0
 
+    # Calculate progress ratio
+    progress_ratio = frame_count / hold_time
+
+    if detected_color and frame_count >= hold_time:
+        current_mode = modes.get(mode, {})
+        action_data = current_mode.get(detected_color)
+
+        if action_data:
+            print(f"✅ Action: {action_data['action']} | Color: {detected_color}")
+            perform_action(action_data)
+
+            # Mode switching
+            if "next_mode" in action_data:
+                mode = action_data["next_mode"]
+                print(f"🔁 Mode switched to: {mode}")
+
+        frame_count = 0
+        progress_ratio = 0
+        time.sleep(1)
+
+    # Draw progress circle
+    if detected_color:
+        draw_progress_circle(frame, progress_ratio)
+
+    last_color = detected_color
     cv2.imshow("Color Controller", frame)
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
+    if cv2.waitKey(1) & 0xFF == ord("q"):
         break
 
 cap.release()

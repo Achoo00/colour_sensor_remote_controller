@@ -1,0 +1,24 @@
+{
+  "modes": {
+    "main": {
+      "red": { "action": "open_url", "args": "https://www.youtube.com/playlist?list=WL", "next_mode": "youtube_controls" },
+      "yellow": { "action": "open_url", "args": "https://www.wcoflix.tv/anime/kaiju-no-8" }
+    },
+    "youtube_controls": {
+      "red": { "action": "click", "args": [500, 400], "next_mode": "video_controls" },
+      "yellow": { "action": "key_combo", "args": ["shift", "n"] }
+    },
+    "video_controls": {
+      "red": { "action": "key_press", "args": ["f"] },
+      "yellow": { "action": "key_combo", "args": ["shift", "n"] }
+    }
+  },
+  "hsv_ranges": {
+    "red": [[0, 120, 70], [10, 255, 255]],
+    "yellow": [[20, 100, 100], [30, 255, 255]]
+  },
+  "detection": {
+    "hold_time": 90,
+    "roi": [200, 200, 100, 100]
+  }
+}
