@@ -41,8 +41,11 @@ SEQUENCE_WINDOW = 2.5  # seconds allowed between sequence colors
 
 def perform_action(action):
     a_type = action.get("type")
+    
+    # Execute the action
     if a_type == "open_url":
         webbrowser.open(action["url"])
+        time.sleep(1)  # Small delay to ensure browser opens before mode switch
     elif a_type == "keyboard":
         key = action["key"]
         if len(key) > 1 and '+' in key:
@@ -61,11 +64,15 @@ def perform_action(action):
         x, y = action["position"]
         pyautogui.moveTo(x, y)
         pyautogui.click()
-    elif a_type == "switch_mode":
+    
+    # Handle mode switching if specified
+    if "next_mode" in action:
         global current_mode, mode_config
         current_mode = action["next_mode"]
         mode_config = load_json(f"config/modes/{current_mode}.json")
         print(f"🔁 Switched to mode: {current_mode}")
+        # Clear sequence history on mode change
+        sequence_history.clear()
 
 print("🟢 Controller started. Press 'q' to quit.")
 
