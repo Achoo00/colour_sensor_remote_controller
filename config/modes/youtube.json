@@ -11,23 +11,5 @@
             "key": "shift+n",
             "hold_time": 2
         }
-    },
-    "sequences": [
-        {
-            "colors": ["red", "yellow"],
-            "time_window": 2.5,
-            "action": {
-                "type": "keyboard",
-                "key": "f"
-            }
-        },
-        {
-            "colors": ["yellow", "red"],
-            "time_window": 2.5,
-            "action": {
-                "type": "keyboard",
-                "key": "space"
-            }
-        }
-    ]
+    }
 }

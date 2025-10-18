@@ -1,0 +1,42 @@
+{
+  "mode_name": "video",
+  "description": "Controls for YouTube playback using red/yellow color sequences.",
+  "type": "sequence",
+  "sequences": {
+    "fullscreen_toggle": {
+      "pattern": ["red", "red"],
+      "action": {
+        "type": "keyboard",
+        "key": "f",
+        "description": "Toggle fullscreen with double red."
+      }
+    },
+    "play_pause": {
+      "pattern": ["red", "yellow"],
+      "action": {
+        "type": "keyboard",
+        "key": "space",
+        "description": "Toggle play/pause with red → yellow."
+      }
+    },
+    "next_video": {
+      "pattern": ["yellow", "red"],
+      "action": {
+        "type": "keyboard_combo",
+        "keys": ["shift", "n"],
+        "description": "Play next video with yellow → red."
+      }
+    },
+    "return_to_youtube": {
+      "pattern": ["yellow", "yellow"],
+      "action": {
+        "type": "mode_switch",
+        "target_mode": "youtube",
+        "description": "Go back to YouTube menu with double yellow."
+      }
+    }
+  },
+  "timing": {
+    "sequence_timeout": 2.5
+  }
+}
