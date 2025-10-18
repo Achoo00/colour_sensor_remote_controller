@@ -1,5 +1,0 @@
-{
-    "use_calibrated": true,
-    "roi": [400, 200, 50, 50],
-    "fps": 30
-}
