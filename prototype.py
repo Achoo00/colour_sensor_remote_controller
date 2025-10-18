@@ -19,7 +19,7 @@ predefined_color_ranges = {
 }
 
 # Define the region of interest (ROI)
-roi_x, roi_y, roi_w, roi_h = 200, 200, 100, 100
+roi_x, roi_y, roi_w, roi_h = 400, 200, 50, 50
 
 # Actions and calibration keys
 controls = {
@@ -37,8 +37,8 @@ action_map = {
 }
 
 # --- FUNCTIONS ---
-def adjust_range(hsv_value, tol=0.1):
-    """Return HSV range ±10%."""
+def adjust_range(hsv_value, tol=0.4):
+    """Return HSV range ±40%."""
     lower = np.clip(hsv_value * (1 - tol), [0, 0, 0], [179, 255, 255])
     upper = np.clip(hsv_value * (1 + tol), [0, 0, 0], [179, 255, 255])
     return np.array(lower, dtype=np.uint8), np.array(upper, dtype=np.uint8)
@@ -50,7 +50,7 @@ def calibrate_color(frame, control_name):
     avg_hsv = np.mean(hsv.reshape(-1, 3), axis=0)
     lower, upper = adjust_range(avg_hsv)
     color_ranges[control_name] = (lower, upper)
-    print(f"[CALIBRATED] {control_name.upper()} → HSV avg={avg_hsv.round(1)}, range=±10%")
+    print(f"[CALIBRATED] {control_name.upper()} → HSV avg={avg_hsv.round(1)}, range=±40%")
 
 # --- MODE SETUP ---
 if USE_PREDEFINED:
