@@ -8,3 +8,13 @@ predefined_color_ranges = {
 
 roi_x, roi_y, roi_w, roi_h = 400, 200, 50, 50
 
+red
+{
+    "lower": [170, 195, 75],
+    "upper": [180, 255, 255]
+}
+
+{
+    "lower": [15, 150, 80],
+    "upper": [25, 255, 255]
+}
