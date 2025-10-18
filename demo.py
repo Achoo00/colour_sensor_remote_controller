@@ -13,7 +13,7 @@ color_ranges = {
     "red": [(0, 100, 100), (10, 255, 255)],
     "green": [(40, 50, 50), (80, 255, 255)],
     "blue": [(100, 150, 0), (140, 255, 255)],
-    "yellow": [(20, 100, 100), (30, 255, 255)],
+    "white": [(20, 100, 100), (255, 255, 255)],
 }
 
 # Map colors to actions
@@ -21,7 +21,7 @@ action_map = {
     "red": lambda: (keyboard.press(Key.up), print("Action: UP")),
     "green": lambda: (keyboard.press(Key.down), print("Action: DOWN")),
     "blue": lambda: (keyboard.press(Key.left), print("Action: LEFT")),
-    "yellow": lambda: (keyboard.press(Key.right), print("Action: RIGHT")),
+    "white": lambda: (keyboard.press(Key.right), print("Action: RIGHT")),
 }
 
 debug_mode = True  # Start with debug enabled

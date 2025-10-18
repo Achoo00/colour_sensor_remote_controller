@@ -12,10 +12,10 @@ USE_PREDEFINED = True  # Set to False for calibration mode
 # Predefined HSV ranges (tweak manually)
 # Format: (lower_HSV, upper_HSV)
 predefined_color_ranges = {
-    "up": (np.array([0, 120, 120]), np.array([10, 255, 255])),      # Red-ish
-    "down": (np.array([40, 50, 50]), np.array([80, 255, 255])),     # Green-ish
-    "left": (np.array([100, 150, 0]), np.array([140, 255, 255])),   # Blue-ish
-    "right": (np.array([20, 100, 100]), np.array([35, 255, 255])),  # Yellow-ish
+    "up": (np.array([170, 195, 75]), np.array([180, 255, 255])),      # dark pink - consistent
+    "down": (np.array([15, 150, 80]), np.array([25, 255, 255])),     # yellow - consistent
+    "left": (np.array([5, 230, 80]), np.array([12, 255, 255])),   # orange
+    "right": (np.array([110, 110, 50]), np.array([120, 255, 255])),  # blue
 }
 
 # Define the region of interest (ROI)
@@ -87,7 +87,7 @@ while True:
         for control, (lower, upper) in color_ranges.items():
             mask = cv2.inRange(hsv, lower, upper)
             count = cv2.countNonZero(mask)
-            if count > (roi_w * roi_h * 0.2):  # at least 20% match
+            if count > (roi_w * roi_h * 0.3):  # at least 20% match
                 detected_control = control
                 break
 
