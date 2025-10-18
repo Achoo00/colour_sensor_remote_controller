@@ -6,6 +6,18 @@ keyboard = Controller()
 
 cap = cv2.VideoCapture(0)
 
+# --- CONFIGURATION ---
+USE_PREDEFINED = True  # Set to False for calibration mode
+
+# Predefined HSV ranges (tweak manually)
+# Format: (lower_HSV, upper_HSV)
+predefined_color_ranges = {
+    "up": (np.array([0, 120, 120]), np.array([10, 255, 255])),      # Red-ish
+    "down": (np.array([40, 50, 50]), np.array([80, 255, 255])),     # Green-ish
+    "left": (np.array([100, 150, 0]), np.array([140, 255, 255])),   # Blue-ish
+    "right": (np.array([20, 100, 100]), np.array([35, 255, 255])),  # Yellow-ish
+}
+
 # Define the region of interest (ROI)
 roi_x, roi_y, roi_w, roi_h = 200, 200, 100, 100
 
@@ -24,9 +36,7 @@ action_map = {
     "right": lambda: keyboard.press(Key.right),
 }
 
-# Store calibrated color ranges
-color_ranges = {}
-
+# --- FUNCTIONS ---
 def adjust_range(hsv_value, tol=0.1):
     """Return HSV range ±10%."""
     lower = np.clip(hsv_value * (1 - tol), [0, 0, 0], [179, 255, 255])
@@ -42,17 +52,25 @@ def calibrate_color(frame, control_name):
     color_ranges[control_name] = (lower, upper)
     print(f"[CALIBRATED] {control_name.upper()} → HSV avg={avg_hsv.round(1)}, range=±10%")
 
-print("=== Calibration Mode ===")
-print("Shine a color in the ROI and press:")
-print("  [1] = Up")
-print("  [2] = Down")
-print("  [3] = Left")
-print("  [4] = Right")
-print("Press [SPACE] when done calibrating to start control mode.")
-print("Press [Q] to quit anytime.\n")
+# --- MODE SETUP ---
+if USE_PREDEFINED:
+    color_ranges = predefined_color_ranges
+    control_mode = True
+    print("=== PREDEFINED MODE ACTIVE ===")
+    print("Using preset HSV ranges. Showing detected actions in real time.")
+else:
+    color_ranges = {}
+    control_mode = False
+    print("=== CALIBRATION MODE ===")
+    print("Shine a color in the ROI and press:")
+    print("  [1] = Up")
+    print("  [2] = Down")
+    print("  [3] = Left")
+    print("  [4] = Right")
+    print("Press [SPACE] when done calibrating to start control mode.")
+    print("Press [Q] to quit anytime.\n")
 
-control_mode = False
-
+# --- MAIN LOOP ---
 while True:
     ret, frame = cap.read()
     if not ret:
@@ -90,11 +108,11 @@ while True:
         cv2.putText(frame, f"Current avg HSV: {avg_hsv.round(1)}", (10, 120),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (180, 255, 255), 1)
 
-    cv2.imshow("Color Controller (HSV Calibrated)", frame)
+    cv2.imshow("Color Controller (HSV)", frame)
     key = cv2.waitKey(1) & 0xFF
 
-    # Calibration key handling
-    if not control_mode:
+    # Calibration handling
+    if not control_mode and not USE_PREDEFINED:
         for control, hotkey in controls.items():
             if key == ord(hotkey):
                 calibrate_color(frame, control)
