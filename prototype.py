@@ -4,15 +4,15 @@ import webbrowser
 import time
 
 # --- CONFIGURATION ---
-CALIBRATION_MODE = False   # True = calibrate HSV, False = use predefined HSV
-FPS = 30
-HOLD_FRAMES = 3 * FPS      # 3 seconds hold
-apply_lighting_correction = True  # comment out to disable lighting correction
+USE_PREDEFINED = True  # Set to False for calibration mode
 
-# --- PREDEFINED HSV RANGES (tweak manually after calibration if needed) ---
-color_ranges = {
-    "red": [(0, 100, 100), (10, 255, 255)],
-    "yellow": [(20, 100, 100), (30, 255, 255)],
+# Predefined HSV ranges (tweak manually)
+# Format: (lower_HSV, upper_HSV)
+predefined_color_ranges = {
+    "up": (np.array([0, 120, 120]), np.array([10, 255, 255])),      # Red-ish
+    "down": (np.array([40, 50, 50]), np.array([80, 255, 255])),     # Green-ish
+    "left": (np.array([100, 150, 0]), np.array([140, 255, 255])),   # Blue-ish
+    "right": (np.array([20, 100, 100]), np.array([35, 255, 255])),  # Yellow-ish
 }
 
 # --- URL ACTIONS ---
@@ -94,38 +94,19 @@ while True:
     detected_color = None
     max_pixels = 0
 
-    # Detect color
-    for color, (lower, upper) in color_ranges.items():
-        mask = cv2.inRange(hsv, np.array(lower), np.array(upper))
-        count = cv2.countNonZero(mask)
-        if count > max_pixels:
-            max_pixels = count
-            detected_color = color
+    if control_mode:
+        for control, (lower, upper) in color_ranges.items():
+            mask = cv2.inRange(hsv, lower, upper)
+            count = cv2.countNonZero(mask)
+            if count > (roi_w * roi_h * 0.2):  # at least 20% match
+                detected_control = control
+                break
 
-    # --- Draw ROI and debug info ---
-    cv2.rectangle(frame, (roi_x, roi_y), (roi_x+roi_w, roi_y+roi_h), (255, 0, 0), 2)
-    if detected_color:
-        cv2.putText(frame, f"Detected: {detected_color}", (10, 30),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
-        print(f"Detected color: {detected_color}")
-
-        # Track duration
-        if color_hold == detected_color:
-            color_hold_frames += 1
-        else:
-            color_hold = detected_color
-            color_hold_frames = 1
-
-        # --- Visual progress indicator ---
-        progress_ratio = min(color_hold_frames / HOLD_FRAMES, 1.0)
-        bar_x1, bar_y1 = roi_x, roi_y + roi_h + 20
-        bar_x2 = int(bar_x1 + roi_w * progress_ratio)
-        cv2.rectangle(frame, (bar_x1, bar_y1), (bar_x1 + roi_w, bar_y1 + 15), (50, 50, 50), -1)
-        cv2.rectangle(frame, (bar_x1, bar_y1), (bar_x2, bar_y1 + 15), (0, 255, 0), -1)
-
-        if progress_ratio < 1.0:
-            cv2.putText(frame, "HOLDING...", (bar_x1, bar_y1 + 35),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
+        if detected_control:
+            cv2.putText(frame, f"Detected: {detected_control.upper()}",
+                        (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+            print(f"[ACTION] {detected_control.upper()} | avg HSV={avg_hsv.round(1)}")
+            action_map[detected_control]()
         else:
             cv2.putText(frame, "READY!", (bar_x1, bar_y1 + 35),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
