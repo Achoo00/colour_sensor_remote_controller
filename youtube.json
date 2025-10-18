@@ -1,0 +1,35 @@
+{
+    "actions": {
+        "red": {
+            "type": "mouse_click",
+            "position": [2352, 586],
+            "hold_time": 2.0
+        }
+    },
+    "sequences": [
+        {
+            "colors": ["red", "yellow"],
+            "time_window": 2.5,
+            "action": {
+                "type": "keyboard",
+                "key": "f"
+            }
+        },
+        {
+            "colors": ["yellow", "red"],
+            "time_window": 2.5,
+            "action": {
+                "type": "keyboard",
+                "key": "space"
+            }
+        },
+        {
+            "colors": ["yellow", "yellow"],
+            "time_window": 2.5,
+            "action": {
+                "type": "keyboard",
+                "key": "shift+n"
+            }
+        }
+    ]
+}

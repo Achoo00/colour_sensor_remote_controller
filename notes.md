@@ -6,7 +6,12 @@ predefined_color_ranges = {
 }
 
 
-roi_x, roi_y, roi_w, roi_h = 400, 200, 50, 50
+{
+    "use_calibrated": true,
+    "roi": [400, 200, 50, 50],
+    "fps": 30
+}
+
 
 red
 {

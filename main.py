@@ -9,6 +9,23 @@ from pynput.keyboard import Controller, Key
 
 keyboard = Controller()
 
+def get_special_key(key_str):
+    """Convert string representation to pynput Key objects"""
+    special_keys = {
+        'space': Key.space,
+        'enter': Key.enter,
+        'esc': Key.esc,
+        'shift': Key.shift,
+        'ctrl': Key.ctrl,
+        'alt': Key.alt,
+        'tab': Key.tab,
+        'up': Key.up,
+        'down': Key.down,
+        'left': Key.left,
+        'right': Key.right
+    }
+    return special_keys.get(key_str.lower(), key_str)
+
 # --- Load Configs ---
 def load_json(path):
     with open(path, "r") as f:
@@ -29,8 +46,6 @@ mode_config = load_json(f"config/modes/{current_mode}.json")
 
 # --- Webcam Setup ---
 cap = cv2.VideoCapture(0)
-cv2.namedWindow("Color Control", cv2.WINDOW_NORMAL)
-cv2.setWindowProperty("Color Control", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 roi_x, roi_y, roi_w, roi_h = GLOBAL_CONFIG["roi"]
 
 # --- State Tracking ---
@@ -49,15 +64,15 @@ def perform_action(action):
     elif a_type == "keyboard":
         key = action["key"]
         if len(key) > 1 and '+' in key:
-            # handle combos like "shift+n"
-            mods = key.split('+')
-            for m in mods[:-1]:
-                keyboard.press(m)
-            keyboard.press(mods[-1])
-            keyboard.release(mods[-1])
-            for m in mods[:-1]:
-                keyboard.release(m)
+            # Handle key combinations
+            keys = [get_special_key(k.strip()) for k in key.split('+')]
+            for k in keys:
+                keyboard.press(k)
+            for k in reversed(keys):
+                keyboard.release(k)
         else:
+            # Handle single keys
+            key = get_special_key(key)
             keyboard.press(key)
             keyboard.release(key)
     elif a_type == "mouse_click":
