@@ -1,0 +1,33 @@
+{
+    "actions": {
+        "red": {
+            "type": "mouse_click",
+            "position": [960, 540],
+            "hold_time": 2,
+            "next_mode": "video"
+        },
+        "yellow": {
+            "type": "keyboard",
+            "key": "shift+n",
+            "hold_time": 2
+        }
+    },
+    "sequences": [
+        {
+            "colors": ["red", "yellow"],
+            "time_window": 2.5,
+            "action": {
+                "type": "keyboard",
+                "key": "f"
+            }
+        },
+        {
+            "colors": ["yellow", "red"],
+            "time_window": 2.5,
+            "action": {
+                "type": "keyboard",
+                "key": "space"
+            }
+        }
+    ]
+}
