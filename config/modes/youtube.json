@@ -2,7 +2,7 @@
     "actions": {
         "red": {
             "type": "mouse_click",
-            "position": [960, 540],
+            "position": [2352, 589],
             "hold_time": 2,
             "next_mode": "video"
         },

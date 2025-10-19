@@ -62,19 +62,24 @@ def perform_action(action):
         webbrowser.open(action["url"])
         time.sleep(1)  # Small delay to ensure browser opens before mode switch
     elif a_type == "keyboard":
-        key = action["key"]
-        if len(key) > 1 and '+' in key:
-            # Handle key combinations
-            keys = [get_special_key(k.strip()) for k in key.split('+')]
-            for k in keys:
-                keyboard.press(k)
-            for k in reversed(keys):
-                keyboard.release(k)
+        # Handle both single key and key combinations
+        if "keys" in action:  # Multiple keys
+            keys = [get_special_key(k) for k in action["keys"]]
+        elif "key" in action:  # Single key
+            key = action["key"]
+            if isinstance(key, str) and '+' in key:
+                keys = [get_special_key(k.strip()) for k in key.split('+')]
+            else:
+                keys = [get_special_key(key)]
         else:
-            # Handle single keys
-            key = get_special_key(key)
-            keyboard.press(key)
-            keyboard.release(key)
+            print(f"Warning: No key or keys found in action: {action}")
+            return
+            
+        # Execute the key presses
+        for k in keys:
+            keyboard.press(k)
+        for k in reversed(keys):
+            keyboard.release(k)
     elif a_type == "mouse_click":
         x, y = action["position"]
         pyautogui.moveTo(x, y)
@@ -136,7 +141,12 @@ while True:
     # --- Sequence-based actions ---
     if "sequences" in mode_config:
         for seq in mode_config["sequences"]:
-            sequence_colors = seq["colors"]
+            # Check if seq is a string or dict and handle accordingly
+            if isinstance(seq, dict):
+                sequence_colors = seq.get("pattern", [])  # Use get() with default empty list
+            else:
+                continue  # Skip if sequence is not properly formatted
+            
             seq_time = seq.get("time_window", SEQUENCE_WINDOW)
             if len(sequence_history) >= len(sequence_colors):
                 recent = [c for c, t in sequence_history[-len(sequence_colors):]]
