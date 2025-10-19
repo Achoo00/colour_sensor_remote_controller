@@ -6,25 +6,22 @@ A Python-based application that uses computer vision to detect colored objects t
 ## 2. Key Features
 
 ### 2.1 Core Functionality
-- **Advanced Color Detection**: Real-time HSV color space detection with configurable color profiles
-- **Region of Interest (ROI)**: Customizable detection area with visual feedback
-- **Visual Feedback System**: Comprehensive on-screen display with mode, color, and action status
-- **Multi-mode Architecture**: Dynamic switching between operational modes with distinct configurations
-- **Action Chaining**: Support for complex action sequences and mode transitions
+- **Color Detection**: Real-time HSV color space detection with configurable color profiles
+- **Region of Interest (ROI)**: Configurable detection area defined in global settings
+- **Multi-mode Support**: Switch between different operational modes with unique configurations
+- **Action Sequences**: Time-based color sequence recognition for advanced interactions
 
 ### 2.2 Action System
-- **Open URL**: Direct URL launching in default browser
+- **Open URL**: Direct URL launching in default browser with automatic mode switching
+- **Keyboard Input**: Support for single keys and key combinations (e.g., shift+n, space)
 - **Mouse Control**: Precise cursor positioning and clicking
-- **Keyboard Input**: Support for single keys and complex key combinations (e.g., Ctrl+Alt+Del)
-- **Mode Switching**: Context-aware mode transitions with state preservation
-- **Sequence Detection**: Time-based color sequence recognition for advanced interactions
+- **Mode Switching**: Seamless transitions between different operational modes
 
-### 2.3 User Interface
-- Full-screen display with clean, informative overlay
-- Real-time color detection feedback
-- Action progress indicators
-- Mode and status display
-- Visual ROI boundary
+### 2.3 Configuration
+- **Global Settings**: Centralized configuration in `global.json`
+- **Color Profiles**: Per-color HSV range configurations
+- **Mode-Specific Actions**: Custom actions for each operational mode
+- **Sequence Detection**: Time-based pattern matching for advanced interactions
 
 ### 3.1 System Requirements
 - Python 3.8+
@@ -32,22 +29,82 @@ A Python-based application that uses computer vision to detect colored objects t
 - NumPy
 - pynput
 - pyautogui
-- pywin32 (Windows) or python-xlib (Linux)
 - Webcam with proper drivers
+- Windows/Linux/macOS
 
 ### 3.2 Configuration Structure
 ```
 config/
 ├── colors/           # Color calibration profiles
-│   ├── red.json
-│   └── yellow.json
+│   ├── red.json      # Example: {"lower": [0, 120, 100], "upper": [10, 255, 255]}
+│   └── yellow.json   # Example: {"lower": [20, 100, 100], "upper": [35, 255, 255]}
 ├── modes/           # Mode configurations
-│   ├── main.json
-│   └── youtube.json
-└── global.json      # Global settings
+│   ├── main.json    # Default mode
+│   ├── youtube.json # YouTube controls
+│   ├── video.json   # Video player controls
+│   └── anime.json   # Anime streaming site controls
+└── global.json      # Global settings (ROI, FPS, etc.)
 ```
 
-### 3.3 Configuration Details
+### 3.3 Action Types
+
+#### 3.3.1 Open URL
+```json
+{
+  "type": "open_url",
+  "url": "https://example.com",
+  "next_mode": "mode_name"
+}
+```
+
+#### 3.3.2 Keyboard Input
+```json
+{
+  "type": "keyboard",
+  "key": "space"
+}
+
+// Or for key combinations
+{
+  "type": "keyboard",
+  "keys": ["shift", "n"]
+}
+```
+
+#### 3.3.3 Mouse Click
+```json
+{
+  "type": "mouse_click",
+  "position": [x, y],
+  "click_count": 1
+}
+```
+
+### 3.4 Sequence Detection
+
+Sequences are defined in mode configurations and trigger actions when colors are detected in a specific order within a time window.
+
+```json
+{
+  "pattern": ["red", "yellow"],
+  "time_window": 2.0,
+  "action": {
+    "type": "keyboard",
+    "key": "space"
+  }
+}
+```
+
+### 3.5 Global Configuration
+
+Example `global.json`:
+```json
+{
+  "use_calibrated": false,
+  "roi": [200, 200, 100, 100],  // x, y, width, height
+  "fps": 30
+}
+```
 - **Global Settings** (`global.json`):
   - `use_calibrated`: Toggle for calibrated color profiles
   - `roi`: Region of interest coordinates [x, y, width, height]
@@ -168,6 +225,24 @@ mkdir -p calibration config/colors config/modes
 3. Calibration data will be saved to `calibration/results.json`
 
 ### 8.3 Running the Application
+
+#### Main Application
+```bash
+python main.py
+```
+
+#### Simulation Mode (for testing without camera)
+```bash
+python simulation.py
+```
+
+### 8.4 Simulation Mode Commands
+- `red`, `yellow`: Simulate color detection
+- `sequence red yellow`: Simulate a color sequence
+- `mode [name]`: Switch to a different mode
+- `list-modes`: List available modes
+- `help`: Show available commands
+- `exit`: Quit the simulation
 ```bash
 # Start the controller
 python main.py
