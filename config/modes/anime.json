@@ -1,0 +1,48 @@
+{
+  "mode_name": "anime",
+  "description": "Controls for anime playback using red/yellow color sequences.",
+  "actions": {
+    "red": {
+        "type": "mouse_click",
+        "position": [2352, 589],
+        "hold_time": 2,
+        "description": "Close ad and toggle play/pause"
+        },
+    "yellow": {
+        "type": "keyboard",
+        "key": "f",
+        "hold_time": 2,
+        "description": "Toggle fullscreen"
+        }
+    }
+  ,
+  "sequences": [
+    {
+      "pattern": ["red", "yellow"],
+      "time_window": 2.0,
+      "action": {
+        "type": "keyboard",
+        "key": "esc",
+        "description": "Close fullscreen"
+      }
+    },
+    {
+      "pattern": ["yellow", "red"],
+      "time_window": 2.0,
+      "action": {
+        "type": "mouse_click",
+        "position": [2352, 589],
+        "description": "Play next episode"
+      }
+    },
+    {
+    "pattern": ["yellow", "red", "yellow"],
+    "time_window": 2.0,
+      "action": {
+        "type": "mouse_click",
+        "position": [2352, 589],
+        "description": "Play previous episode"
+      }
+    }
+  ]
+}

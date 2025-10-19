@@ -8,8 +8,9 @@
         },
         "yellow": {
             "type": "open_url",
-            "url": "https://www.wcoflix.tv/anime/kaiju-no-8",
-            "hold_time": 3
+            "url": "https://www.wcoflix.tv/the-summer-hikaru-died-episode-1-english-subbed",
+            "hold_time": 3,
+            "next_mode": "anime"
         }
     }
 }

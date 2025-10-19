@@ -3,15 +3,16 @@
   "description": "Controls for YouTube playback using red/yellow color sequences.",
   "actions": {
     "red": {
-            "type": "mouse_click",
-            "position": [2352, 589],
-            "hold_time": 2,
-            "next_mode": "video"
+        "type": "keyboard",
+        "key": "space", 
+        "hold_time": 2,
+        "description": "Toggle play/pause"
         },
-        "yellow": {
-            "type": "keyboard",
-            "key": "5",
-            "hold_time": 2
+    "yellow": {
+        "type": "keyboard",
+        "key": "5",
+        "hold_time": 2,
+        "description": "Middle of video"
         }
     }
   ,
@@ -22,7 +23,7 @@
       "action": {
         "type": "keyboard",
         "key": "f",
-        "description": "Toggle fullscreen with double red"
+        "description": "Toggle fullscreen"
       }
     },
     {
@@ -35,21 +36,12 @@
       }
     },
     {
-      "pattern": ["yellow", "yellow"],
+      "pattern": ["yellow", "red", "yellow"],
       "time_window": 2.0,
       "action": {
-        "type": "space",
-        "target_mode": "youtube",
-        "description": "Go back to YouTube menu with double yellow"
-      }
-    },
-      {
-      "pattern": ["red", "red"],
-      "time_window": 2.0,
-      "action": {
-        "type": "esc",
-        "target_mode": "youtube",
-        "description": "Go back to YouTube menu with double yellow"
+        "type": "keyboard",
+        "keys": ["shift", "p"],
+        "description": "Play previous video with yellow → red → yellow"
       }
     }
   ]
