@@ -1,21 +1,21 @@
 {
   "mode_name": "anime",
-  "description": "Controls for anime playback using color-based sequences and bookmarklets for next/previous episode navigation.",
+  "description": "Controls for anime playback using red/yellow color sequences.",
   "actions": {
     "red": {
-      "type": "mouse_click",
-      "position": [1154, 1000],
-      "hold_time": 2,
-      "description": "Close ad and toggle play/pause"
-    },
+        "type": "mouse_click",
+        "position": [3035, 1032],
+        "hold_time": 2,
+        "description": "Close ad and toggle play/pause"
+        },
     "yellow": {
-      "type": "mouse_click",
-      "position": [1154, 1000],
-      "click_count": 2,
-      "description": "Toggle fullscreen"
+        "type": "keyboard",
+        "key": "f",
+        "hold_time": 2,
+        "description": "Toggle fullscreen"
+        }
     }
-  },
-
+  ,
   "sequences": [
     {
       "pattern": ["red", "yellow"],
@@ -26,7 +26,7 @@
           {
             "type": "javascript",
             "code": "javascript:(function(){const next=document.querySelector('.prev-fln .prev-next[style*=\"right\"] a[rel=\"next\"]')||document.querySelector('a[rel=\"next\"]')||document.querySelectorAll('.prev-next a[href*=\"episode\"]')[1];if(next){next.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>next.click(),400);}else{alert('%E2%9A%A0%EF%B8%8F No next episode link found!');}})();",
-            "description": "Play next ep"
+            "description": "Play next episode"
           }
         ]
       }
@@ -35,14 +35,18 @@
       "pattern": ["yellow", "red"],
       "time_window": 2.0,
       "action": {
-        "type": "sequence",
-        "actions": [
-          {
-            "type": "javascript",
-            "code": "javascript:(function(){const prev=document.querySelector('.prev-fln .prev-next[style*=\"left\"] a[rel=\"prev\"]')||document.querySelector('a[rel=\"prev\"]')||document.querySelectorAll('.prev-next a[href*=\"episode\"]')[0];if(prev){prev.scrollIntoView({behavior:'smooth',block:'center'});setTimeout(()=>prev.click(),400);}else{alert('%E2%9A%A0%EF%B8%8F No previous episode link found!');}})();",
-            "description": "Play previous episode"
-          }
-        ]
+        "type": "mouse_click",
+        "position": [3110, 693],
+        "description": "Play next episode"
+      }
+    },
+    {
+    "pattern": ["yellow", "red", "yellow"],
+    "time_window": 2.0,
+      "action": {
+        "type": "mouse_click",
+        "position": [2352, 589],
+        "description": "Play previous episode"
       }
     }
   ]
