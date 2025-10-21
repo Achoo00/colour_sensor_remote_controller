@@ -61,6 +61,42 @@ def perform_action(action):
     if a_type == "open_url":
         webbrowser.open(action["url"])
         time.sleep(1)  # Small delay to ensure browser opens before mode switch
+    elif a_type == "javascript":
+        # Get the bookmark name from the action
+        bookmark_name = action.get("bookmark", "")
+        if not bookmark_name:
+            print("⚠️ No bookmark name specified in action")
+            return
+            
+        # Show bookmarks bar with Ctrl+B
+        keyboard.press(Key.ctrl)
+        keyboard.press('b')
+        time.sleep(0.1)
+        keyboard.release('b')
+        keyboard.release(Key.ctrl)
+        time.sleep(0.2)
+        
+        # Type the bookmark name
+        pyautogui.write(bookmark_name)
+        time.sleep(0.8)
+        
+        # Press Tab, Down, and Enter
+        keyboard.press(Key.tab)
+        keyboard.release(Key.tab)
+        time.sleep(0.1)
+        keyboard.press(Key.down)
+        keyboard.release(Key.down)
+        time.sleep(0.1)
+        keyboard.press(Key.enter)
+        keyboard.release(Key.enter)
+        time.sleep(0.2)
+        
+        # Hide bookmarks bar with Ctrl+B
+        keyboard.press(Key.ctrl)
+        keyboard.press('b')
+        time.sleep(0.1)
+        keyboard.release('b')
+        keyboard.release(Key.ctrl)
     elif a_type == "keyboard":
         # Handle both single key and key combinations
         if "keys" in action:  # Multiple keys
