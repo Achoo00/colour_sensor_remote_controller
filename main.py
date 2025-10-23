@@ -5,7 +5,15 @@ import os
 import time
 import webbrowser
 import pyautogui
+import platform
+import subprocess
 from pynput.keyboard import Controller, Key
+
+# Windows-specific imports
+if platform.system() == 'Windows':
+    import win32gui
+    import win32con
+    import win32api
 
 keyboard = Controller()
 
@@ -54,6 +62,85 @@ color_start_time = None
 sequence_history = []  # stores (color, timestamp)
 SEQUENCE_WINDOW = 2.5  # seconds allowed between sequence colors
 
+def move_window_to_display_linux(window_title, display_index=1):
+    """Move window to specific display on Linux using wmctrl"""
+    try:
+        # Check if wmctrl is installed
+        if os.system('which wmctrl > /dev/null') != 0:
+            print("Installing wmctrl...")
+            os.system('sudo apt-get install -y wmctrl')
+            
+        # Get the window ID
+        time.sleep(1)  # Give the window time to appear
+        result = subprocess.run(
+            ['wmctrl', '-l'], 
+            capture_output=True, 
+            text=True
+        )
+        
+        # Find the window by title
+        for line in result.stdout.split('\n'):
+            if window_title.lower() in line.lower():
+                window_id = line.split()[0]
+                # Get display geometry
+                result = subprocess.run(
+                    ['xrandr', '--listmonitors'],
+                    capture_output=True,
+                    text=True
+                )
+                displays = result.stdout.strip().split('\n')[1:]  # Skip header
+                if display_index < len(displays):
+                    # Move window to display (assuming 1920px wide displays)
+                    subprocess.run([
+                        'wmctrl', '-i', '-r', window_id, 
+                        '-e', f'0,{display_index * 1920},0,-1,-1'
+                    ])
+                    return True
+        return False
+        
+    except Exception as e:
+        print(f"Error moving window: {e}")
+        return False
+
+def move_window_to_display_windows(window_title, display_index=1):
+    """Move window to specific display on Windows"""
+    try:
+        hwnd = win32gui.FindWindow(None, window_title)
+        if not hwnd:
+            return False
+            
+        monitors = win32api.EnumDisplayMonitors()
+        if display_index >= len(monitors):
+            return False
+            
+        monitor = monitors[display_index][2]
+        left, top, right, bottom = monitor[0], monitor[1], monitor[2], monitor[3]
+        width = right - left
+        height = bottom - top
+        
+        win32gui.SetWindowPos(
+            hwnd,
+            win32con.HWND_TOP,
+            left, top, width, height,
+            win32con.SWP_SHOWWINDOW
+        )
+        return True
+        
+    except Exception as e:
+        print(f"Error moving window: {e}")
+        return False
+
+def move_window_to_display(window_title, display_index=1):
+    """Cross-platform window moving"""
+    system = platform.system()
+    if system == "Windows":
+        return move_window_to_display_windows(window_title, display_index)
+    elif system == "Linux":
+        return move_window_to_display_linux(window_title, display_index)
+    else:
+        print(f"Window management not supported on {system}")
+        return False
+
 def perform_action(action):
     a_type = action.get("type")
     
@@ -61,6 +148,50 @@ def perform_action(action):
     if a_type == "open_url":
         webbrowser.open(action["url"])
         time.sleep(1)  # Small delay to ensure browser opens before mode switch
+        
+        # Move browser window to specified display if requested
+        if "move_to_display" in action:
+            time.sleep(1)  # Additional delay for browser to fully load
+            
+            # Common browser window titles - add more if needed
+            browser_titles = [
+                "Google Chrome",
+                "Mozilla Firefox",
+                "Microsoft Edge",
+                " - Brave",
+                " - Vivaldi"
+            ]
+            
+            # On Linux, we need to get the actual window title
+            if platform.system() == 'Linux':
+                # Try to get the actual window title using wmctrl
+                try:
+                    result = subprocess.run(
+                        ['wmctrl', '-l'], 
+                        capture_output=True, 
+                        text=True
+                    )
+                    for line in result.stdout.split('\n'):
+                        for browser in browser_titles:
+                            if browser.lower() in line.lower():
+                                # Use the full window title from wmctrl
+                                full_title = ' '.join(line.split()[3:])
+                                if move_window_to_display(full_title, action["move_to_display"]):
+                                    return
+                except Exception as e:
+                    print(f"Error finding browser window: {e}")
+            
+            # Fallback: Try with standard browser titles
+            moved = False
+            for title in browser_titles:
+                if move_window_to_display(title, action["move_to_display"]):
+                    moved = True
+                    break
+            
+            if not moved:
+                print("⚠️ Could not find browser window to move. Current windows:")
+                if platform.system() == 'Linux':
+                    os.system('wmctrl -l')
     elif a_type == "keyboard":
         # Handle both single key and key combinations
         if "keys" in action:  # Multiple keys

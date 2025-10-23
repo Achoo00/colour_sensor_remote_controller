@@ -26,3 +26,6 @@ red
 
 anime
 "position": [3035, 1032],
+
+sudo apt-get update
+sudo apt-get install wmctrl x11-utils
