@@ -297,14 +297,25 @@ while True:
 
     # --- Duration-based actions ---
     if detected_color in mode_config["actions"]:
-        action_data = mode_config["actions"][detected_color]
+        action_data = mode_config["actions"][detected_color].copy()  # Create a copy to avoid modifying the original
         threshold = action_data.get("hold_time", 0)
         
         # Only trigger the action if we just crossed the threshold
         if duration >= threshold and (color_start_time + threshold) >= (now - 0.1):  # 0.1s window to catch the threshold crossing
+            # Check if we need to switch modes after this action
+            next_mode = action_data.pop("next_mode", None)
+            
+            # Perform the action (without the next_mode in the action data)
             perform_action(action_data)
             action_triggered = True
             triggered_text = f"{detected_color} (duration)"
+            
+            # Handle mode switching after the action is performed
+            if next_mode:
+                current_mode = next_mode
+                mode_config = load_json(f"config/modes/{current_mode}.json")
+                print(f"🔁 Switched to mode: {current_mode}")
+                sequence_history.clear()
             # Don't reset color_start_time here to prevent rapid retriggering
 
     # --- Sequence-based actions ---
