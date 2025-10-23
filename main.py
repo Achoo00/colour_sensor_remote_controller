@@ -299,11 +299,13 @@ while True:
     if detected_color in mode_config["actions"]:
         action_data = mode_config["actions"][detected_color]
         threshold = action_data.get("hold_time", 0)
-        if duration >= threshold:
+        
+        # Only trigger the action if we just crossed the threshold
+        if duration >= threshold and (color_start_time + threshold) >= (now - 0.1):  # 0.1s window to catch the threshold crossing
             perform_action(action_data)
             action_triggered = True
             triggered_text = f"{detected_color} (duration)"
-            color_start_time = now  # reset timer
+            # Don't reset color_start_time here to prevent rapid retriggering
 
     # --- Sequence-based actions ---
     if "sequences" in mode_config:
