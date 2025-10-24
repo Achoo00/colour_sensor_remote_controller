@@ -242,11 +242,14 @@ def perform_action(action):
             print(f"Warning: No key or keys found in action: {action}")
             return
             
-        # Execute the key presses
+        # Execute the key presses with a small delay for better registration
         for k in keys:
             keyboard.press(k)
+            time.sleep(0.1)  # Small delay after press
+        time.sleep(0.2)  # Slightly longer delay between press and release
         for k in reversed(keys):
             keyboard.release(k)
+            time.sleep(0.05)  # Small delay between key releases
     elif a_type == "mouse_click":
         x, y = action["position"]
         pyautogui.moveTo(x, y)
