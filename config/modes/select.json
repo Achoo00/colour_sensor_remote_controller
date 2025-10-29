@@ -1,0 +1,27 @@
+{
+  "mode_name": "select",
+  "description": "Selector mode for navigating through currently watching anime.",
+  "actions": {
+    "red": {
+      "type": "navigate",
+      "direction": "down",
+      "description": "Move selection down"
+    },
+    "yellow": {
+      "type": "navigate",
+      "direction": "up",
+      "description": "Move selection up"
+    }
+  },
+  "sequences": [
+    {
+      "pattern": ["red", "yellow"],
+      "time_window": 2.0,
+      "action": {
+        "type": "select",
+        "description": "Select current anime and switch to anime mode",
+        "next_mode": "anime"
+      }
+    }
+  ]
+}

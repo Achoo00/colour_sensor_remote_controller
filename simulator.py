@@ -14,7 +14,17 @@ class ColorSimulator:
             (c, t) for c, t in self.sequence_history if now - t < self.sequence_window
         ]
 
+    def get_recent_sequence(self, length=2):
+        """Get the most recent sequence of colors and their timestamps."""
+        if len(self.sequence_history) < length:
+            return None, None
+        
+        colors = [c for c, _ in self.sequence_history[-length:]]
+        times = [t for _, t in self.sequence_history[-length:]]
+        return colors, times
+    
     def check_sequences(self):
+        """Check if any configured sequences match the recent input."""
         if "sequences" not in self.mode_config:
             return False
 
@@ -22,12 +32,15 @@ class ColorSimulator:
             if isinstance(seq, dict) and "pattern" in seq:
                 pattern = seq["pattern"]
                 seq_time = seq.get("time_window", self.sequence_window)
-                if len(self.sequence_history) >= len(pattern):
-                    recent = [c for c, _ in self.sequence_history[-len(pattern):]]
-                    times = [t for _, t in self.sequence_history[-len(pattern):]]
-                    if recent == pattern and (times[-1] - times[0]) <= seq_time:
-                        print(f"🎯 Sequence matched: {'→'.join(pattern)}")
+                
+                colors, times = self.get_recent_sequence(len(pattern))
+                if not colors:
+                    continue
+                    
+                if colors == pattern and (times[-1] - times[0]) <= seq_time:
+                    print(f"🎯 Sequence matched: {'→'.join(pattern)}")
+                    if "action" in seq:
                         perform_action(seq["action"])
-                        self.sequence_history.clear()
-                        return True
+                    self.sequence_history.clear()
+                    return True
         return False
