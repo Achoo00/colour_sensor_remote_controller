@@ -44,7 +44,7 @@ def main():
     # Initialize controller state
     state = ControllerState()
     mode_config = load_mode_config(state.current_mode)
-    overlay.set_mode(state.current_mode)
+    overlay.update_mode(state.current_mode)
     
     # Initialize video capture
     cap = cv2.VideoCapture(0)
@@ -108,7 +108,7 @@ def main():
                         if next_mode:
                             state.current_mode = next_mode
                             mode_config = load_mode_config(state.current_mode)
-                            overlay.set_mode(state.current_mode)
+                            overlay.update_mode(state.current_mode)
                             print(f"🔁 Mode switched to: {state.current_mode}")
                         # Reset debounce after triggering
                         state.hold_start_time = None
