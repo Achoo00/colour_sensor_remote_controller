@@ -114,7 +114,22 @@ def main():
                 state.sequence_history = []
                 return
 
-        # Debounce logic with per-action hold_time
+        # Handle navigation actions in select mode
+        if state.current_mode == 'select' and color and color in mode_config.get('actions', {}):
+            action = mode_config['actions'][color]
+            if action.get('type') == 'navigate' and anime_selector:
+                if color != state.last_color or (state.hold_start_time and time.time() - state.hold_start_time >= action.get('hold_time', 1.5)):
+                    if action.get('direction') == 'down':
+                        anime_selector.move_selection(1)  # Move down
+                    elif action.get('direction') == 'up':
+                        anime_selector.move_selection(-1)  # Move up
+                    # Reset hold timer after navigation
+                    state.hold_start_time = time.time()
+                elif state.hold_start_time is None:
+                    state.hold_start_time = time.time()
+                return
+
+        # Debounce logic with per-action hold_time for non-navigation actions
         if color == state.last_color:
             if color is not None and state.hold_start_time is not None:
                 action_data = mode_config.get("actions", {}).get(color)
