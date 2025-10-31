@@ -1,5 +1,8 @@
 import time
-from actions import perform_action
+try:
+    from utils.actions import perform_action
+except ImportError:
+    from actions import perform_action
 
 class ColorSimulator:
     def __init__(self, mode_config, sequence_window=2.5):

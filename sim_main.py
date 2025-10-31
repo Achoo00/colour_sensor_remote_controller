@@ -4,12 +4,12 @@ Color Controller Simulation - Main Application
 Handles the main application loop and mode switching.
 """
 import os
-from config_loader import load_json
-from actions import perform_action
+from utils.config_loader import load_json
+from utils.actions import perform_action
 from simulator import ColorSimulator
-from sim_anime_selector import AnimeSelector
-from sim_anime_player import play_anime, open_anime_episode, get_next_episode
-from sim_anilist import update_episode_progress
+from modules.anime_selector import AnimeSelector
+from modules.anime_player import play_anime, open_anime_episode, get_next_episode
+from modules.anilist import update_episode_progress
 
 # Configuration
 CONFIG_DIR = "config"
