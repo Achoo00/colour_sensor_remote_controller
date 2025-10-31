@@ -1,7 +1,8 @@
 from utils.config_loader import load_json, load_color_config
-from utils.vision import detect_color
+from utils.vision import detect_color, load_anime_progress, draw_anime_list
 from utils.actions import perform_action
-import cv2, time
+import cv2
+import time
 
 
 def load_mode_config(mode_name):
@@ -22,11 +23,16 @@ class ControllerState:
 GLOBAL_CONFIG = load_json("config/global.json")
 color_config = load_color_config(GLOBAL_CONFIG)
 
+# Load anime list
+anime_list = load_anime_progress()
+
 state = ControllerState()
 mode_config = load_mode_config(state.current_mode)
 
 cap = cv2.VideoCapture(0)
 roi = GLOBAL_CONFIG["roi"]
+last_anime_update = 0
+ANIME_UPDATE_INTERVAL = 5  # seconds
 
 print("🟢 Controller started. Press 'q' to quit.")
 
@@ -47,6 +53,16 @@ while True:
         cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
         if state.current_mode:
             cv2.putText(frame, f"Mode: {state.current_mode}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+        
+        # Show anime list in select mode
+        if state.current_mode == 'select':
+            # Update anime list periodically
+            current_time = time.time()
+            if current_time - last_anime_update > ANIME_UPDATE_INTERVAL:
+                anime_list = load_anime_progress()
+                last_anime_update = current_time
+            draw_anime_list(frame, anime_list)
+            
         if color:
             cv2.putText(frame, f"Detected: {color}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
     except Exception:

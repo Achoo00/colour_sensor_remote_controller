@@ -8,11 +8,9 @@
             "next_mode": "youtube"
         },
         "yellow": {
-            "type": "open_url",
-            "url": "https://www.wcoflix.tv/the-summer-hikaru-died-episode-1-english-subbed",
             "hold_time": 3,
             "move_to_display": 1,
-            "next_mode": "anime"
+            "next_mode": "select"
         }
     }
 }
