@@ -1,8 +1,9 @@
 import time, webbrowser
 from input_simulator import press_keys, mouse_click
 from windows_mover import move_window_to_display
+from modules.overlay_window import get_overlay_instance
 
-def perform_action(action):
+def perform_action(action, overlay=None):
     a_type = action.get("type")
     if a_type == "open_url":
         webbrowser.open(action["url"])
@@ -14,4 +15,14 @@ def perform_action(action):
         press_keys(keys)
     elif a_type == "mouse_click":
         mouse_click(*action["position"])
+    elif a_type == "navigate":
+        if overlay and hasattr(overlay, 'move_selection'):
+            direction = action.get("direction", "down")
+            overlay.move_selection(direction)
+    # Handle mode switching if specified in the action
+    if "next_mode" in action:
+        if overlay:
+            overlay.update_mode(action["next_mode"])
+        return action["next_mode"]
+    return None
 

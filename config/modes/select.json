@@ -5,11 +5,13 @@
     "red": {
       "type": "navigate",
       "direction": "down",
+      "hold_time": 1.5,
       "description": "Move selection down"
     },
     "yellow": {
       "type": "navigate",
       "direction": "up",
+      "hold_time": 1.5,
       "description": "Move selection up"
     }
   },

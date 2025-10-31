@@ -102,9 +102,9 @@ def main():
                 if action_data:
                     hold_time = float(action_data.get("hold_time", 0))
                     if hold_time <= 0 or (now - state.hold_start_time) >= hold_time:
-                        perform_action(action_data)
+                        # Pass the overlay to perform_action
+                        next_mode = perform_action(action_data, overlay)
                         # Mode switching if defined
-                        next_mode = action_data.get("next_mode")
                         if next_mode:
                             state.current_mode = next_mode
                             mode_config = load_mode_config(state.current_mode)
