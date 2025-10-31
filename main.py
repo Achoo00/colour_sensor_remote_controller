@@ -1,8 +1,13 @@
-from utils.config_loader import load_json, load_color_config
-from utils.vision import detect_color, load_anime_progress, draw_anime_list
-from utils.actions import perform_action
-import cv2
+import sys
 import time
+import cv2
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QTimer
+
+from utils.config_loader import load_json, load_color_config
+from utils.vision import detect_color, load_anime_progress
+from utils.actions import perform_action
+from modules.overlay_window import OverlayWindow
 
 
 def load_mode_config(mode_name):
@@ -20,113 +25,106 @@ class ControllerState:
         self.hold_start_time = None
 
 
-GLOBAL_CONFIG = load_json("config/global.json")
-color_config = load_color_config(GLOBAL_CONFIG)
+def main():
+    # Initialize Qt application
+    app = QApplication(sys.argv)
+    
+    # Load configuration
+    GLOBAL_CONFIG = load_json("config/global.json")
+    color_config = load_color_config(GLOBAL_CONFIG)
+    
+    # Initialize overlay window
+    overlay = OverlayWindow()
+    overlay.show()
+    
+    # Load anime list
+    anime_list = load_anime_progress()
+    overlay.update_anime_list(anime_list)
+    
+    # Initialize controller state
+    state = ControllerState()
+    mode_config = load_mode_config(state.current_mode)
+    overlay.set_mode(state.current_mode)
+    
+    # Initialize video capture
+    cap = cv2.VideoCapture(0)
+    roi = GLOBAL_CONFIG["roi"]
+    last_anime_update = 0
+    ANIME_UPDATE_INTERVAL = 5  # seconds
+    
+    print("🟢 Controller started. Press 'q' to quit.")
+    
+    # Set up a timer for the main loop
+    timer = QTimer()
+    target_fps = GLOBAL_CONFIG.get("fps", 30)
+    frame_delay = int(1000 / target_fps)  # Convert to milliseconds
 
-# Load anime list
-anime_list = load_anime_progress()
-
-state = ControllerState()
-mode_config = load_mode_config(state.current_mode)
-
-cap = cv2.VideoCapture(0)
-roi = GLOBAL_CONFIG["roi"]
-last_anime_update = 0
-ANIME_UPDATE_INTERVAL = 5  # seconds
-
-print("🟢 Controller started. Press 'q' to quit.")
-
-target_fps = GLOBAL_CONFIG.get("fps", 30)
-frame_delay = 1.0 / max(target_fps, 1)
-
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
-
-    # Detect current color inside ROI
-    color = detect_color(frame, roi, color_config)
-
-    # Draw ROI overlay
-    try:
-        x, y, w, h = roi
-        cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
-        if state.current_mode:
-            cv2.putText(frame, f"Mode: {state.current_mode}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+    def update_frame():
+        nonlocal anime_list, last_anime_update
         
-        # Show anime list in select mode
+        ret, frame = cap.read()
+        if not ret:
+            return
+
+        # Detect current color inside ROI
+        color = detect_color(frame, roi, color_config)
+        
+        # Update overlay with current color and mode
+        overlay.set_color(color if color else "None")
+        
+        # Update anime list in select mode
         if state.current_mode == 'select':
-            # Update anime list periodically
             current_time = time.time()
             if current_time - last_anime_update > ANIME_UPDATE_INTERVAL:
                 anime_list = load_anime_progress()
+                overlay.update_anime_list(anime_list)
                 last_anime_update = current_time
-            draw_anime_list(frame, anime_list)
-            
-        if color:
-            cv2.putText(frame, f"Detected: {color}", (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2)
-    except Exception:
-        pass
+        
+        # Process color detection and mode switching
+        process_color_detection(color, state, mode_config, overlay)
+        
+        # Process Qt events to keep the UI responsive
+        app.processEvents()
 
-    now = time.time()
+    def process_color_detection(color, state, mode_config, overlay):
+        now = time.time()
 
-    # Maintain sequence history (only store recent few seconds)
-    if color is not None:
-        state.sequence_history.append((color, now))
-        # Keep last 5 seconds of history to bound memory
-        state.sequence_history = [(c, t) for (c, t) in state.sequence_history if now - t <= 5.0]
+        # Maintain sequence history (only store recent few seconds)
+        if color is not None:
+            state.sequence_history.append((color, now))
+            # Keep last 5 seconds of history to bound memory
+            state.sequence_history = [(c, t) for (c, t) in state.sequence_history if now - t <= 5.0]
 
-    # Debounce logic with per-action hold_time
-    if color == state.last_color:
-        if color is not None and state.hold_start_time is not None:
-            action_data = mode_config.get("actions", {}).get(color)
-            if action_data:
-                hold_time = float(action_data.get("hold_time", 0))
-                if hold_time <= 0 or (now - state.hold_start_time) >= hold_time:
-                    perform_action(action_data)
-                    # Mode switching if defined
-                    next_mode = action_data.get("next_mode")
-                    if next_mode:
-                        state.current_mode = next_mode
-                        mode_config = load_mode_config(state.current_mode)
-                        print(f"🔁 Mode switched to: {state.current_mode}")
-                    # Reset debounce after triggering
-                    state.hold_start_time = None
-                    # Prevent repeated trigger until color changes or hold restarts
-                    state.last_color = None
-    else:
-        # Color changed
-        state.last_color = color
-        state.hold_start_time = now if color is not None else None
+        # Debounce logic with per-action hold_time
+        if color == state.last_color:
+            if color is not None and state.hold_start_time is not None:
+                action_data = mode_config.get("actions", {}).get(color)
+                if action_data:
+                    hold_time = float(action_data.get("hold_time", 0))
+                    if hold_time <= 0 or (now - state.hold_start_time) >= hold_time:
+                        perform_action(action_data)
+                        # Mode switching if defined
+                        next_mode = action_data.get("next_mode")
+                        if next_mode:
+                            state.current_mode = next_mode
+                            mode_config = load_mode_config(state.current_mode)
+                            overlay.set_mode(state.current_mode)
+                            print(f"🔁 Mode switched to: {state.current_mode}")
+                        # Reset debounce after triggering
+                        state.hold_start_time = None
+                        # Prevent repeated trigger until color changes or hold restarts
+                        state.last_color = None
+        else:
+            # Color changed
+            state.last_color = color
+            state.hold_start_time = now if color is not None else None
+    
+    # Set up the timer and start the application
+    timer.timeout.connect(update_frame)
+    timer.start(frame_delay)
+    
+    # Start the Qt event loop
+    sys.exit(app.exec())
 
-    # Sequence detection
-    # Support objects with keys 'pattern' or legacy 'colors'
-    for seq in mode_config.get("sequences", []) or []:
-        pattern = seq.get("pattern") or seq.get("colors")
-        if not pattern:
-            continue
-        tw = float(seq.get("time_window", 2.5))
-        if len(state.sequence_history) < len(pattern):
-            continue
-        # Extract the most recent N colors and times
-        recent = state.sequence_history[-len(pattern):]
-        recent_colors = [c for (c, _) in recent]
-        t0 = recent[0][1]
-        t1 = recent[-1][1]
-        if recent_colors == pattern and (t1 - t0) <= tw:
-            action_data = seq.get("action")
-            if action_data:
-                perform_action(action_data)
-            # Clear history to avoid double-trigger
-            state.sequence_history.clear()
-            break
-
-    cv2.imshow("Controller", frame)
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-    # Simple FPS pacing
-    if frame_delay > 0:
-        time.sleep(frame_delay)
-
-cap.release()
-cv2.destroyAllWindows()
+if __name__ == "__main__":
+    main()
