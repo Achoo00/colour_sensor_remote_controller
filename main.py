@@ -68,7 +68,7 @@ def main():
     frame_delay = int(1000 / target_fps)  # Convert to milliseconds
 
     def update_frame():
-        nonlocal anime_list, last_anime_update
+        nonlocal anime_list, last_anime_update, mode_config
         
         ret, frame = cap.read()
         if not ret:
@@ -89,7 +89,9 @@ def main():
                 last_anime_update = current_time
         
         # Process color detection and mode switching
-        process_color_detection(color, state, mode_config, overlay, anime_selector)
+        new_mode_config = process_color_detection(color, state, mode_config, overlay, anime_selector)
+        if new_mode_config is not None:
+            mode_config = new_mode_config
         
         # Process Qt events to keep the UI responsive
         app.processEvents()
@@ -102,6 +104,10 @@ def main():
             state.sequence_history.append((color, now))
             # Keep last 5 seconds of history to bound memory
             state.sequence_history = [(c, t) for (c, t) in state.sequence_history if now - t <= 5.0]
+            
+        # Debug: Log current mode and detected color
+        if color and color != state.last_color:
+            print(f"🎨 Color detected: {color} | Current mode: {state.current_mode}")
 
         # Check for color sequences (like red+yellow for selection)
         if len(state.sequence_history) >= 2:
@@ -134,9 +140,13 @@ def main():
                             # Mode switching if defined
                             if next_mode:
                                 state.current_mode = next_mode
-                                mode_config = load_mode_config(state.current_mode)
+                                new_mode_config = load_mode_config(state.current_mode)
                                 overlay.update_mode(state.current_mode)
                                 print(f"🔁 Mode switched to: {state.current_mode}")
+                                # Reset debounce after triggering
+                                state.hold_start_time = None
+                                state.last_color = None
+                                return new_mode_config
                         # Reset debounce after triggering
                         state.hold_start_time = None
                         # Prevent repeated trigger until color changes or hold restarts
@@ -145,6 +155,8 @@ def main():
             # Color changed
             state.last_color = color
             state.hold_start_time = now if color is not None else None
+        
+        return None
     
     # Set up the timer and start the application
     timer.timeout.connect(update_frame)

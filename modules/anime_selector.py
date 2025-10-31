@@ -9,8 +9,13 @@ except ImportError:
 class AnimeSelector:
     """Handles anime selection from the user's currently watching list."""
     
-    def __init__(self):
-        """Initialize the anime selector with the user's currently watching list."""
+    def __init__(self, overlay=None):
+        """Initialize the anime selector with the user's currently watching list.
+        
+        Args:
+            overlay: Optional OverlayWindow instance for UI updates
+        """
+        self.overlay = overlay
         self.anime_list = []
         self.selected_index = 0
         self.load_anime_list()
@@ -55,7 +60,11 @@ class AnimeSelector:
             ]
     
     def move_selection(self, direction):
-        """Move the selection up or down in the list."""
+        """Move the selection up or down in the list.
+        
+        Args:
+            direction: Either "up"/"down" (string) or -1/1 (integer)
+        """
         if not self.anime_list:
             print("⚠️  No anime available to select.")
             return False
@@ -71,13 +80,19 @@ class AnimeSelector:
                 self.selected_index = 0
             
             # Move selection - use modulo to ensure we wrap around correctly
-            if direction == "up":
+            # Handle both string and integer directions
+            if direction == "up" or direction == -1:
                 self.selected_index = (self.selected_index - 1) % len(self.anime_list)
-            else:  # down
+            elif direction == "down" or direction == 1:
                 self.selected_index = (self.selected_index + 1) % len(self.anime_list)
             
             print(f"🔄 New index: {self.selected_index}")
             self.display_selection_with_context()
+            
+            # Update overlay if available
+            if self.overlay and hasattr(self.overlay, 'update_selection'):
+                self.overlay.update_selection(self.selected_index)
+            
             return True
             
         except Exception as e:
@@ -104,6 +119,18 @@ class AnimeSelector:
         except Exception as e:
             print(f"❌ Error getting current anime: {e}")
             return None
+    
+    def select_current_anime(self):
+        """Select the currently highlighted anime and return it.
+        
+        Returns:
+            dict: The selected anime with title, url, progress, etc.
+        """
+        anime = self.get_current_anime()
+        if anime:
+            title = anime.get('title', 'Unknown')
+            print(f"✅ Selected: {title}")
+        return anime
     
     def display_selection_with_context(self):
         """Display the list with the current selection highlighted."""
