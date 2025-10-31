@@ -21,9 +21,25 @@ class OverlayWindow(QWidget):
         
     def setup_ui(self):
         """Initialize the UI components."""
-        # Get the primary screen (secondary monitor if available)
-        screen = QApplication.primaryScreen().availableGeometry()
-        screen_geometry = QRect(screen.width() - 440, 40, 400, 600)
+        # Get available screens
+        screens = QApplication.screens()
+        
+        # Default to primary screen if only one screen is available
+        if len(screens) > 1:
+            # Use the last screen (usually the secondary display)
+            target_screen = screens[-1]
+        else:
+            # Fallback to primary screen if only one display
+            target_screen = QApplication.primaryScreen()
+        
+        # Get the screen geometry
+        screen_geometry = target_screen.availableGeometry()
+        
+        # Calculate window position (top-right corner of the target screen)
+        window_width = 400
+        window_height = 600
+        window_x = screen_geometry.x() + screen_geometry.width() - window_width - 20  # 20px margin from right
+        window_y = screen_geometry.y() + 20  # 20px margin from top
         
         # Set window properties
         self.setWindowTitle("Anime Controller Overlay")
@@ -34,7 +50,9 @@ class OverlayWindow(QWidget):
             Qt.WindowType.WindowTransparentForInput
         )
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.setGeometry(screen_geometry)
+        
+        # Set window geometry on the target screen
+        self.setGeometry(window_x, window_y, window_width, window_height)
         
         # Main container
         self.container = QWidget(self)

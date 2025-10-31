@@ -70,7 +70,7 @@ def main():
         color = detect_color(frame, roi, color_config)
         
         # Update overlay with current color and mode
-        overlay.set_color(color if color else "None")
+        overlay.update_color(color if color else "None")
         
         # Update anime list in select mode
         if state.current_mode == 'select':
