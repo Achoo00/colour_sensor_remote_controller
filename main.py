@@ -163,6 +163,43 @@ def main():
                                     state.hold_start_time = None
                                     return new_mode_config
                         
+                        # Handle bookmarklet sequence action
+                        elif action_type == "bookmarklet_sequence":
+                            bookmarklet_name = action.get("bookmarklet_name", "")
+                            print(f"📚 Executing bookmarklet: {bookmarklet_name}")
+                            
+                            # Import here to avoid circular dependency
+                            from input_simulator import press_keys, type_text
+                            
+                            # Ctrl+B to open bookmarks
+                            press_keys(["ctrl", "b"])
+                            time.sleep(0.3)
+                            
+                            # Type the bookmarklet name
+                            type_text(bookmarklet_name)
+                            time.sleep(0.2)
+                            
+                            # Tab to focus on results
+                            press_keys(["tab"])
+                            time.sleep(0.1)
+                            
+                            # Up arrow to select first result
+                            press_keys(["up"])
+                            time.sleep(0.1)
+                            
+                            # Enter to execute bookmarklet
+                            press_keys(["enter"])
+                            time.sleep(0.2)
+                            
+                            # Ctrl+B to close bookmarks
+                            press_keys(["ctrl", "b"])
+                            
+                            print(f"✅ Bookmarklet '{bookmarklet_name}' executed")
+                            
+                            # Clear sequence after handling
+                            state.sequence_history = []
+                            return None
+                        
                         # Clear sequence after handling
                         state.sequence_history = []
                         return None

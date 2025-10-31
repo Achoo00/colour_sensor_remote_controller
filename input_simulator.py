@@ -30,6 +30,16 @@ def press_keys(keys):
         keyboard.release(k)
         time.sleep(0.05)
 
+def type_text(text):
+    """Type text character by character with a small delay between each character.
+    
+    Args:
+        text: The text string to type
+    """
+    for char in text:
+        keyboard.type(char)
+        time.sleep(0.05)  # Small delay between characters
+
 def mouse_click(x, y):
     pyautogui.moveTo(x, y)
     pyautogui.click()
