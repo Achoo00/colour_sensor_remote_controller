@@ -8,6 +8,7 @@ from utils.config_loader import load_json, load_color_config
 from utils.vision import detect_color, load_anime_progress
 from utils.actions import perform_action
 from modules.overlay_window import OverlayWindow
+from modules.anime_selector import AnimeSelector
 
 
 def load_mode_config(mode_name):
@@ -37,9 +38,15 @@ def main():
     overlay = OverlayWindow()
     overlay.show()
     
+    # Initialize anime selector with overlay reference
+    anime_selector = AnimeSelector(overlay)
+    
     # Load anime list
     anime_list = load_anime_progress()
     overlay.update_anime_list(anime_list)
+    
+    # Store the anime list in the selector
+    anime_selector.anime_list = anime_list
     
     # Initialize controller state
     state = ControllerState()
@@ -81,12 +88,12 @@ def main():
                 last_anime_update = current_time
         
         # Process color detection and mode switching
-        process_color_detection(color, state, mode_config, overlay)
+        process_color_detection(color, state, mode_config, overlay, anime_selector)
         
         # Process Qt events to keep the UI responsive
         app.processEvents()
 
-    def process_color_detection(color, state, mode_config, overlay):
+    def process_color_detection(color, state, mode_config, overlay, anime_selector=None):
         now = time.time()
 
         # Maintain sequence history (only store recent few seconds)
@@ -95,6 +102,18 @@ def main():
             # Keep last 5 seconds of history to bound memory
             state.sequence_history = [(c, t) for (c, t) in state.sequence_history if now - t <= 5.0]
 
+        # Check for color sequences (like red+yellow for selection)
+        if len(state.sequence_history) >= 2:
+            recent_colors = [c for (c, _) in state.sequence_history[-2:]]
+            if recent_colors == ['red', 'yellow'] or recent_colors == ['yellow', 'red']:
+                if anime_selector and hasattr(anime_selector, 'select_current_anime'):
+                    selected_anime = anime_selector.select_current_anime()
+                    if selected_anime and 'url' in selected_anime:
+                        webbrowser.open(selected_anime['url'])
+                # Clear sequence after handling
+                state.sequence_history = []
+                return
+
         # Debounce logic with per-action hold_time
         if color == state.last_color:
             if color is not None and state.hold_start_time is not None:
@@ -102,14 +121,20 @@ def main():
                 if action_data:
                     hold_time = float(action_data.get("hold_time", 0))
                     if hold_time <= 0 or (now - state.hold_start_time) >= hold_time:
-                        # Pass the overlay to perform_action
-                        next_mode = perform_action(action_data, overlay)
-                        # Mode switching if defined
-                        if next_mode:
-                            state.current_mode = next_mode
-                            mode_config = load_mode_config(state.current_mode)
-                            overlay.update_mode(state.current_mode)
-                            print(f"🔁 Mode switched to: {state.current_mode}")
+                        # Handle navigation in select mode
+                        if state.current_mode == 'select' and action_data.get('type') == 'navigate':
+                            if anime_selector:
+                                anime_selector.move_selection(action_data.get('direction', 'down'))
+                                overlay.update_selection(anime_selector.selected_index)
+                        else:
+                            # Pass the overlay to perform_action for other actions
+                            next_mode = perform_action(action_data, overlay)
+                            # Mode switching if defined
+                            if next_mode:
+                                state.current_mode = next_mode
+                                mode_config = load_mode_config(state.current_mode)
+                                overlay.update_mode(state.current_mode)
+                                print(f"🔁 Mode switched to: {state.current_mode}")
                         # Reset debounce after triggering
                         state.hold_start_time = None
                         # Prevent repeated trigger until color changes or hold restarts
