@@ -1,6 +1,7 @@
 import sys
 import time
 import cv2
+import webbrowser
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QTimer
 
@@ -114,22 +115,7 @@ def main():
                 state.sequence_history = []
                 return
 
-        # Handle navigation actions in select mode
-        if state.current_mode == 'select' and color and color in mode_config.get('actions', {}):
-            action = mode_config['actions'][color]
-            if action.get('type') == 'navigate' and anime_selector:
-                if color != state.last_color or (state.hold_start_time and time.time() - state.hold_start_time >= action.get('hold_time', 1.5)):
-                    if action.get('direction') == 'down':
-                        anime_selector.move_selection(1)  # Move down
-                    elif action.get('direction') == 'up':
-                        anime_selector.move_selection(-1)  # Move up
-                    # Reset hold timer after navigation
-                    state.hold_start_time = time.time()
-                elif state.hold_start_time is None:
-                    state.hold_start_time = time.time()
-                return
-
-        # Debounce logic with per-action hold_time for non-navigation actions
+        # Debounce logic with per-action hold_time
         if color == state.last_color:
             if color is not None and state.hold_start_time is not None:
                 action_data = mode_config.get("actions", {}).get(color)
@@ -139,11 +125,12 @@ def main():
                         # Handle navigation in select mode
                         if state.current_mode == 'select' and action_data.get('type') == 'navigate':
                             if anime_selector:
-                                anime_selector.move_selection(action_data.get('direction', 'down'))
+                                direction = 1 if action_data.get('direction') == 'down' else -1
+                                anime_selector.move_selection(direction)
                                 overlay.update_selection(anime_selector.selected_index)
                         else:
-                            # Pass the overlay to perform_action for other actions
-                            next_mode = perform_action(action_data, overlay)
+                            # Pass the overlay and anime_selector to perform_action for other actions
+                            next_mode = perform_action(action_data, overlay, anime_selector)
                             # Mode switching if defined
                             if next_mode:
                                 state.current_mode = next_mode
