@@ -1,7 +1,6 @@
 import time, webbrowser
 from input_simulator import press_keys, mouse_click
 from windows_mover import move_window_to_display
-from modules.overlay_window import get_overlay_instance
 
 def perform_action(action, overlay=None):
     a_type = action.get("type")
