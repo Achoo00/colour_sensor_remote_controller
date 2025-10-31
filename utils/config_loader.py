@@ -153,3 +153,29 @@ def load_config(config_dir: str = "config") -> Config:
     config = Config(config_dir)
     config.load_configs()
     return config
+
+# Legacy support functions
+def load_json(path: str) -> Any:
+    """Load JSON from a file (legacy support function).
+    
+    Args:
+        path: Path to the JSON file
+        
+    Returns:
+        Parsed JSON data
+    """
+    return Config._load_json(Path(path))
+
+def load_color_config(global_config: Dict[str, Any]) -> Dict[str, Any]:
+    """Load color configuration based on global config (legacy support function).
+    
+    Args:
+        global_config: Global configuration dictionary
+        
+    Returns:
+        Color configuration dictionary
+    """
+    config = Config()
+    config.global_config = global_config
+    config._load_color_config()
+    return config.color_config
