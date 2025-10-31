@@ -90,8 +90,47 @@ colour_sensor_remote_controller/
 2. Implement proper logging
 3. Add configuration validation
 
-## 4. Dependencies
+## 4. Simulation and Overlay Integration
+
+### A. Overlay System
+1. **OverlayWindow Class**
+   - Create a transparent, always-on-top overlay window
+   - Display current mode, status, and anime list
+   - Support for fade in/out animations
+   - Click-through functionality
+
+2. **Visual Feedback**
+   - Highlight currently selected anime
+   - Show progress bars for each anime
+   - Display mode-specific instructions
+   - Visual feedback for color detection
+
+### B. Simulation Mode
+1. **Unified Interface**
+   - Create a common interface for both simulation and real hardware
+   - Abstract color detection and input handling
+   - Support for both keyboard input and physical sensor
+
+2. **Simulation Features**
+   - Color input simulation
+   - Mode switching simulation
+   - Visual feedback in overlay
+   - Debug information display
+
+### C. Integration Points
+1. **Controller Integration**
+   - Connect overlay to controller state
+   - Update overlay on state changes
+   - Handle window events
+
+2. **Event System**
+   - Implement event listeners for mode changes
+   - Handle selection updates
+   - Support for custom actions
+
+## 5. Dependencies
 - OpenCV for camera input
+- PyQt6 for overlay window
 - Requests for API calls
 - Colorama for colored console output
 - Python-dotenv for environment variables

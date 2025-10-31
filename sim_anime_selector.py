@@ -4,11 +4,20 @@ from sim_anilist import show_currently_watching
 class AnimeSelector:
     """Handles anime selection from the user's currently watching list."""
     
-    def __init__(self):
-        """Initialize the anime selector with the user's currently watching list."""
+    def __init__(self, overlay=None):
+        """Initialize the anime selector with the user's currently watching list.
+        
+        Args:
+            overlay: Reference to the overlay window for syncing selection
+        """
         self.anime_list = []
         self.selected_index = 0
+        self.overlay = overlay
         self.load_anime_list()
+        
+        # Initialize overlay with the first selection if available
+        if self.overlay and self.anime_list:
+            self.overlay.update_selection(self.selected_index)
         
     def load_anime_list(self):
         """Load the user's currently watching anime list with fallback to sample data."""
@@ -74,6 +83,11 @@ class AnimeSelector:
             
             print(f"🔄 New index: {self.selected_index}")
             self.display_selection_with_context()
+            
+            # Update overlay with new selection
+            if self.overlay:
+                self.overlay.update_selection(self.selected_index)
+                
             return True
             
         except Exception as e:
