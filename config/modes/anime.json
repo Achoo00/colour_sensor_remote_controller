@@ -3,10 +3,23 @@
   "description": "Controls for anime playback using red/yellow color sequences.",
   "actions": {
     "red": {
-      "type": "bookmarklet",
-      "name": "close and play",
+      "type": "image_sequence",
+      "sequence": [
+        {
+          "image_path": "screenshots/close_btn.png",
+          "confidence": 0.9,
+          "timeout": 3,
+          "wait_after": 0.5
+        },
+        {
+          "image_path": "screenshots/play_btn.png",
+          "confidence": 0.7,
+          "timeout": 3,
+          "wait_after": 0.2
+        }
+      ],
       "hold_time": 2,
-      "description": "Close ad and toggle play/pause using bookmarklet"
+      "description": "Close ad and play video using image detection"
     },
     "yellow": {
       "type": "keyboard",

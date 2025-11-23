@@ -84,5 +84,8 @@ oneline:
 javascript:(function(){function tap(el){if(!el)return;el.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true}));el.dispatchEvent(new PointerEvent("pointerup",{bubbles:true}));el.click();}var btn=document.getElementById("close-btn");if(btn)tap(btn);setTimeout(function(){var icon=document.querySelector(".vjs-icon-placeholder");if(icon){tap(icon);if(icon.parentElement)tap(icon.parentElement);}else{var v=document.querySelector("video");if(v){v.focus();v.play();}}},800);})();
 
 
+javascript:(function(){var btn=document.getElementById("close-btn");if(btn){btn.click();}setTimeout(function(){var icon=document.querySelector(".vjs-icon-placeholder");if(icon){icon.click();if(icon.parentElement)icon.parentElement.click();}},400);})();
+
+
 youtube play all button
 <yt-touch-feedback-shape aria-hidden="true" class="yt-spec-touch-feedback-shape yt-spec-touch-feedback-shape--overlay-touch-response-inverse"><div class="yt-spec-touch-feedback-shape__stroke"></div><div class="yt-spec-touch-feedback-shape__fill"></div></yt-touch-feedback-shape>

@@ -51,6 +51,26 @@ def perform_action(action, overlay=None, anime_selector=None):
     elif a_type == "bookmarklet":
         from input_simulator import trigger_bookmarklet
         trigger_bookmarklet(action["name"])
+    elif a_type == "image_click":
+        from input_simulator import click_image
+        image_path = action.get("image_path")
+        confidence = action.get("confidence", 0.8)
+        timeout = action.get("timeout", 5)
+        click_image(image_path, confidence, timeout)
+    elif a_type == "image_sequence":
+        from input_simulator import click_image
+        sequence = action.get("sequence", [])
+        for step in sequence:
+            image_path = step.get("image_path")
+            confidence = step.get("confidence", 0.8)
+            timeout = step.get("timeout", 5)
+            wait_after = step.get("wait_after", 0.5)
+            
+            if click_image(image_path, confidence, timeout):
+                time.sleep(wait_after)
+            else:
+                print(f"⚠️ Sequence interrupted. Could not find: {image_path}")
+                break
     elif a_type == "navigate":
         if anime_selector and hasattr(anime_selector, 'move_selection'):
             direction = 1 if action.get("direction") == "down" else -1

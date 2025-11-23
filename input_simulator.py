@@ -68,3 +68,30 @@ def trigger_bookmarklet(name):
     
     # Ctrl+B to close bookmarks
     press_keys(["ctrl", "b"])
+
+def click_image(image_path, confidence=0.8, timeout=5):
+    """Find and click an image on screen.
+    
+    Args:
+        image_path: Path to the image file
+        confidence: Match confidence (0.0 to 1.0)
+        timeout: How long to wait for image in seconds
+    """
+    start_time = time.time()
+    print(f"🔍 Looking for image: {image_path} (Confidence: {confidence})")
+    
+    while time.time() - start_time < timeout:
+        try:
+            location = pyautogui.locateCenterOnScreen(image_path, confidence=confidence)
+            if location:
+                print(f"✅ Found image at {location}. Clicking...")
+                pyautogui.click(location)
+                return True
+        except Exception as e:
+            # ImageNotFoundException or other errors
+            pass
+        
+        time.sleep(0.5)
+    
+    print(f"❌ Image not found: {image_path}")
+    return False
