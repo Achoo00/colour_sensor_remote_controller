@@ -2,7 +2,41 @@ import time, webbrowser
 from input_simulator import press_keys, mouse_click
 from windows_mover import move_window_to_display
 
+def focus_window(window_title):
+    """Focus a window by title."""
+    try:
+        import platform
+        if platform.system() == "Windows":
+            import win32gui, win32con
+            
+            def callback(hwnd, _):
+                if win32gui.IsWindowVisible(hwnd):
+                    title = win32gui.GetWindowText(hwnd)
+                    if window_title.lower() in title.lower():
+                        try:
+                            # Restore if minimized
+                            if win32gui.IsIconic(hwnd):
+                                win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
+                            
+                            # Bring to front and focus
+                            win32gui.SetForegroundWindow(hwnd)
+                            return True
+                        except Exception as e:
+                            print(f"Error focusing window: {e}")
+                return True
+            
+            win32gui.EnumWindows(callback, None)
+            return True
+    except Exception as e:
+        print(f"Error focusing window: {e}")
+        return False
+
 def perform_action(action, overlay=None, anime_selector=None):
+    # Focus window if requested
+    if "focus_window" in action:
+        focus_window(action["focus_window"])
+        time.sleep(0.2)  # Wait for focus
+
     a_type = action.get("type")
     if a_type == "open_url":
         webbrowser.open(action["url"])
@@ -14,6 +48,9 @@ def perform_action(action, overlay=None, anime_selector=None):
         press_keys(keys)
     elif a_type == "mouse_click":
         mouse_click(*action["position"])
+    elif a_type == "bookmarklet":
+        from input_simulator import trigger_bookmarklet
+        trigger_bookmarklet(action["name"])
     elif a_type == "navigate":
         if anime_selector and hasattr(anime_selector, 'move_selection'):
             direction = 1 if action.get("direction") == "down" else -1

@@ -26,6 +26,7 @@ class ControllerState:
         self.sequence_history = []  # list[(color, timestamp)]
         self.last_color = None
         self.hold_start_time = None
+        self.current_anime = None  # Track currently selected anime for navigation
 
 
 def main():
@@ -141,6 +142,9 @@ def main():
                         if action_type == "select" and anime_selector:
                             selected_anime = anime_selector.select_current_anime()
                             if selected_anime:
+                                # Store selected anime in state
+                                state.current_anime = selected_anime
+                                
                                 # Generate WCOFlix URL using AnimePlayer
                                 anime_title = selected_anime.get('title', '')
                                 next_episode = selected_anime.get('progress', 0) + 1
@@ -163,46 +167,46 @@ def main():
                                     state.hold_start_time = None
                                     return new_mode_config
                         
-                        # Handle bookmarklet sequence action
-                        elif action_type == "bookmarklet_sequence":
-                            bookmarklet_name = action.get("bookmarklet_name", "")
-                            print(f"📚 Executing bookmarklet: {bookmarklet_name}")
+                        # Handle next_episode action
+                        elif action_type == "next_episode":
+                            current_anime = state.current_anime
+                            if not current_anime:
+                                print("⚠️ No anime currently selected. Cannot play next episode.")
+                                state.sequence_history = []
+                                return None
+
+                            anime_title = current_anime.get('title', '')
+                            current_ep = current_anime.get('progress', 0)
+                            status = current_anime.get('status', 'airing') # Default to airing if unknown
                             
-                            # Import here to avoid circular dependency
-                            from input_simulator import press_keys, type_text
+                            print(f"📺 Processing next episode for: {anime_title} (Status: {status})")
                             
-                            # Ctrl+B to open bookmarks
-                            press_keys(["ctrl", "b"])
-                            time.sleep(0.3)
-                            
-                            # Type the bookmarklet name
-                            type_text(bookmarklet_name)
-                            time.sleep(0.2)
-                            
-                            # Tab to focus on results
-                            press_keys(["tab"])
-                            time.sleep(0.1)
-                            
-                            # Up arrow to select first result
-                            press_keys(["up"])
-                            time.sleep(0.1)
-                            
-                            # Enter to execute bookmarklet
-                            press_keys(["enter"])
-                            time.sleep(0.2)
-                            
-                            # Ctrl+B to close bookmarks
-                            press_keys(["ctrl", "b"])
-                            
-                            print(f"✅ Bookmarklet '{bookmarklet_name}' executed")
+                            if status == "finished":
+                                # Consistent URL format - use direct generation
+                                next_episode = current_ep + 1
+                                wcoflix_url = anime_player.generate_anime_url(anime_title, next_episode)
+                                print(f"🎬 Opening Episode {next_episode}: {wcoflix_url}")
+                                webbrowser.open(wcoflix_url)
+                                
+                                # Update state
+                                state.current_anime['progress'] = next_episode
+                                # TODO: Save this progress to disk if needed
+                                
+                            else:
+                                # Airing/Inconsistent - use bookmarklet fallback
+                                bookmarklet_name = action.get("bookmarklet_name", "next episode")
+                                print(f"📚 Airing anime detected. Using bookmarklet: {bookmarklet_name}")
+                                
+                                # Import here to avoid circular dependency
+                                from input_simulator import trigger_bookmarklet
+                                trigger_bookmarklet(bookmarklet_name)
+                                
+                                # Optimistically update progress
+                                state.current_anime['progress'] = current_ep + 1
                             
                             # Clear sequence after handling
                             state.sequence_history = []
                             return None
-                        
-                        # Clear sequence after handling
-                        state.sequence_history = []
-                        return None
 
         # Debounce logic with per-action hold_time
         if color == state.last_color:

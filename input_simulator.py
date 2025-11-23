@@ -43,3 +43,28 @@ def type_text(text):
 def mouse_click(x, y):
     pyautogui.moveTo(x, y)
     pyautogui.click()
+
+def trigger_bookmarklet(name):
+    """Trigger a bookmarklet by name using the browser's address bar or bookmark menu."""
+    # Ctrl+B to open bookmarks
+    press_keys(["ctrl", "b"])
+    time.sleep(0.3)
+    
+    # Type the bookmarklet name
+    type_text(name)
+    time.sleep(0.2)
+    
+    # Tab to focus on results
+    press_keys(["tab"])
+    time.sleep(0.5)
+    
+    # Up arrow to select first result
+    press_keys(["up"])
+    time.sleep(0.5)
+    
+    # Enter to execute bookmarklet
+    press_keys(["enter"])
+    time.sleep(0.2)
+    
+    # Ctrl+B to close bookmarks
+    press_keys(["ctrl", "b"])

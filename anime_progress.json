@@ -5,25 +5,29 @@
       "title": "One-Punch Man Season 3",
       "progress": 4,
       "total_episodes": 12,
-      "url": "https://anilist.co/anime/153800"
+      "url": "https://anilist.co/anime/153800",
+      "status": "airing"
     },
     {
       "title": "MONOGATARI Series: OFF & MONSTER Season",
       "progress": 10,
       "total_episodes": 14,
-      "url": "https://anilist.co/anime/173533"
+      "url": "https://anilist.co/anime/173533",
+      "status": "finished"
     },
     {
       "title": "Kaiju No. 8 Season 2",
       "progress": 10,
       "total_episodes": 11,
-      "url": "https://anilist.co/anime/178754"
+      "url": "https://anilist.co/anime/178754",
+      "status": "finished"
     },
     {
       "title": "Gachiakuta",
       "progress": 14,
       "total_episodes": 24,
-      "url": "https://anilist.co/anime/178025"
+      "url": "https://anilist.co/anime/178025",
+      "status": "airing"
     }
   ]
 }

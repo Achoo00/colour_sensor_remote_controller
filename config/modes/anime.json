@@ -3,30 +3,39 @@
   "description": "Controls for anime playback using red/yellow color sequences.",
   "actions": {
     "red": {
-        "type": "mouse_click",
-        "position": [3035, 1032],
-        "hold_time": 2,
-        "description": "Close ad and toggle play/pause"
-        },
-    "yellow": {
-        "type": "keyboard",
-        "keys": ["f"],
-        "hold_time": 2,
-        "description": "Toggle fullscreen"
-        }
+      "type": "bookmarklet",
+      "name": "close and play",
+      "hold_time": 2,
+      "description": "Close ad and toggle play/pause using bookmarklet"
     },
+    "yellow": {
+      "type": "keyboard",
+      "keys": [
+        "f"
+      ],
+      "focus_window": "Firefox",
+      "hold_time": 2,
+      "description": "Toggle fullscreen"
+    }
+  },
   "sequences": [
     {
-      "pattern": ["red", "yellow"],
+      "pattern": [
+        "red",
+        "yellow"
+      ],
       "time_window": 2.0,
       "action": {
-        "type": "bookmarklet_sequence",
+        "type": "next_episode",
         "bookmarklet_name": "next episode",
-        "description": "Play next episode using bookmarklet"
+        "description": "Play next episode (smart)"
       }
     },
     {
-      "pattern": ["yellow", "red"],
+      "pattern": [
+        "yellow",
+        "red"
+      ],
       "time_window": 2.0,
       "action": {
         "type": "bookmarklet_sequence",
