@@ -29,3 +29,11 @@ anime
 
 sudo apt-get update
 sudo apt-get install wmctrl x11-utils
+
+bookmarklet
+javascript:(function(){
+    var btn=document.getElementById('close-btn');
+    if(btn) btn.click();
+    var v=document.querySelector('video');
+    if(v) { v.focus(); v.paused ? v.play() : v.pause(); }
+})();

@@ -144,3 +144,5 @@ Webcam → Frame Capture → ROI Extraction → Color Detection (HSV)
 ```
 
 Note: `main.py` imports from `utils.*` modules, but the actual modules (`config_loader.py`, `actions.py`) are at the root level, so the imports would need to be fixed for the program to run.
+
+
