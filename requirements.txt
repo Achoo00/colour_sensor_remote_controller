@@ -3,3 +3,8 @@ numpy==1.24.3
 pynput==1.7.6
 pywin32==306; sys_platform == 'win32'
 python-xlib==0.33; sys_platform == 'linux'
+PyQt6
+yt-dlp
+feedparser
+deluge-client
+python-mpv

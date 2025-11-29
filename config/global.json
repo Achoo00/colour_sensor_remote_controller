@@ -1,5 +1,3 @@
 {
-    "use_calibrated": true,
-    "roi": [400, 200, 50, 50],
-    "fps": 30
+    "youtube_playlist_url": "https://youtube.com/playlist?list=PLxx8aBNNbWW5oCTiXDt0QQnXdZamvdrfk&si=1p_2U7_y1fpExKP2"
 }
