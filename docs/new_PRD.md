@@ -79,14 +79,36 @@ The landing page displaying content.
 
 ### 4.3 Feature: Anime Download Pipeline `[NEW]`
 
-Automates the acquisition of media via Deluge.
+Automates the acquisition and tracking of anime media via Deluge.
 
-  * **Trigger:** User selects "Download" on an anime tile.
-  * **Step 1: Search:** Use `feedparser` to parse Nyaa.si RSS: `https://nyaa.si/?page=rss&q=[Anime Title] [Ep Number]`.
-      * *Logic:* Filter for "Trusted" authors (e.g., SubsPlease) and resolution (1080p).
-  * **Step 2: Queue:** Send the Magnet Link to the local Deluge Client using `deluge-client`.
-  * **Step 3: Monitor:** The Dashboard displays a progress bar for the active download (polling Deluge every 5s).
-  * **Step 4: Organization:** Upon completion, a script moves the file to `~/Videos/Anime/[Title]/`.
+  * **Download Status Indicators:**
+      * **Not Downloaded:** No indicator (default state)
+      * **Downloading:** Spinning progress indicator with percentage
+      * **Downloaded:** Green checkmark icon
+      * **Error:** Red warning icon (if download fails)
+  
+  * **Storage Structure:**
+      * Base Directory: `~/Videos/Anime/`
+      * Per Anime: `[Anime Title]/`
+      * Episodes: `[Anime Title] - S01E[XX].mkv`
+      * Metadata: `[Anime Title]/.metadata.json` (stores download info, quality, etc.)
+
+  * **Download Workflow:**
+      1. **Trigger:** User selects "Download" on an anime tile.
+      2. **Search:** Use `feedparser` to parse Nyaa.si RSS: `https://nyaa.si/?page=rss&q=[Anime Title] [Ep Number]`.
+          * *Logic:* Filter for "Trusted" authors (e.g., SubsPlease) and resolution (1080p).
+      3. **Queue:** Send the Magnet Link to the local Deluge Client using `deluge-client`.
+      4. **Monitor:** The Dashboard displays a progress bar for the active download (polling Deluge every 5s).
+      5. **Organization:** Upon completion:
+          - Move file to `~/Videos/Anime/[Title]/`
+          - Create/Update `.metadata.json` with download info
+          - Update UI status to "Downloaded"
+
+  * **Status Tracking:**
+      - Check local filesystem for existing downloads
+      - Verify file integrity using checksums
+      - Update status in real-time as downloads progress
+      - Persist status between application restarts
 
 ### 4.4 Feature: Media Playback (MPV) `[NEW]`
 
@@ -169,3 +191,9 @@ query ($username: String, $status: MediaListStatus) {
   * **Nyaa Access:** Nyaa.si is blocked by some ISPs. *Mitigation:* Ensure VPN is active or use a proxy domain.
   * **Lighting:** Color detection is sensitive to light changes. *Mitigation:* Keep the `calibrate.py` tool handy to update ranges quickly.
   * **YouTube Rate Limits:** Parsing playlists too frequently may get IP blocked. *Mitigation:* Cache the playlist data and only refresh on app launch.
+
+
+  dashboard
+  red: switch mode
+  green: select
+  blue: navigate

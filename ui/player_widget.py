@@ -1,12 +1,13 @@
 import sys
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt, pyqtSignal
+import os
 
 try:
     import mpv
-except ImportError:
+except (ImportError, OSError) as e:
     mpv = None
-    print("⚠️ python-mpv not found. Video playback will be simulated.")
+    print(f"⚠️ python-mpv not found or libmpv missing: {e}. Video playback will be simulated.")
 
 class PlayerWidget(QWidget):
     """
@@ -47,13 +48,44 @@ class PlayerWidget(QWidget):
             self.layout.addWidget(self.label)
 
     def play(self, url):
-        """Start playing a video URL."""
+        """
+        Start playing a video URL or local file.
+        
+        Args:
+            url: Can be a URL or local file path
+        """
+        print(f"Attempting to play: {url}")
+        
+        # Convert to string if it's a Path object
+        if hasattr(url, 'as_posix'):
+            url = url.as_posix()
+            
+        # Check if it's a local file
+        if url.startswith(('http://', 'https://', 'magnet:', 'acestream://')):
+            is_local = False
+        else:
+            is_local = True
+            # Convert to absolute path if needed
+            if not os.path.isabs(url):
+                url = os.path.abspath(url)
+            # Check if file exists
+            if not os.path.exists(url):
+                print(f"❌ File not found: {url}")
+                return False
+                
+        print(f"Playing {'local file' if is_local else 'URL'}: {url}")
         print(f"▶️ Playing: {url}")
         if self.mpv_player:
             self.mpv_player.play(url)
             self.is_playing = True
         else:
-            self.label.setText(f"Playing: {url}")
+            self.label.setText(f"Opening in external player:\n{os.path.basename(url)}")
+            try:
+                print(f"🚀 Opening in default player: {url}")
+                os.startfile(url)
+            except Exception as e:
+                self.label.setText(f"Error opening file:\n{e}")
+                print(f"❌ Error opening external player: {e}")
 
     def stop(self):
         """Stop playback."""
